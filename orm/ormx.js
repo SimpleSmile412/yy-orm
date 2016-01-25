@@ -1,4 +1,4 @@
-var common = require("yy-common");
+var common = require("../../yy-common");
 var util = require("util");
 var orm = require("orm");
 var type = require("./type");

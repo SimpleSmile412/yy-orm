@@ -1,5 +1,8 @@
-var ormx = require("./orm/ormx");
+// var ormx = require("./orm/ormx");
 var type = require("./orm/type");
 
-ormx.type = type;
-module.exports = ormx;
+// ormx.type = type;
+// module.exports = ormx;
+module.exports = {
+    type: type
+}
