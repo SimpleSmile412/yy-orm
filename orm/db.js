@@ -53,9 +53,11 @@ DB.$proto("sync", function() {
     var result = Promise.resolve();
     for (var table in this.models) {
         var model = this.models[table];
-        result = result.then(function() {
-            return model.sync();
-        });
+        ! function(model) {
+            result = result.then(function() {
+                return model.sync();
+            });
+        }(model);
     }
     return result;
 });
@@ -64,9 +66,11 @@ DB.$proto("drop", function() {
     var result = Promise.resolve();
     for (var table in this.models) {
         var model = this.models[table];
-        result = result.then(function() {
-            return model.drop();
-        });
+        ! function(model) {
+            result = result.then(function() {
+                return model.drop();
+            });
+        }(model);
     }
     return result;
 });

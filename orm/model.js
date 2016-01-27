@@ -48,7 +48,7 @@ Model.$proto("toSql", function() {
     var sql = util.format(fmt, table, tableStr);
     return sql;
 });
-Model.$proto("toModel", function(row) {
+Model.$proto("toObj", function(row) {
     var def = this.def;
     var ret = {};
     for (var field in this.def) {
@@ -74,4 +74,15 @@ Model.$proto("sync", function() {
 Model.$proto("drop", function() {
     var sql = "DROP TABLE IF EXISTS " + this.table;
     return this.db.query(sql);
+});
+Model.$proto("create", function(obj, tx) {
+    var row = this.toRow(obj);
+    var that = this;
+    return this.db.create(this.table, row, tx).then(function(res) {
+        var ret = that.toObj(row);
+        if (that.key._auto) {
+            ret[that.key._field] = res.rows.insertId;
+        }
+        return ret;
+    })
 });
