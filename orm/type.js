@@ -81,6 +81,13 @@ Type.$proto("auto", function() {
     this._auto = true;
     return this;
 });
+Type.$proto("on", function(col) {
+    if (col !== undefined) {
+        this._col = col;
+    }
+    return this;
+});
+
 
 Type.$proto("unique", function() {
     this._unique = true;

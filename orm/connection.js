@@ -1,4 +1,5 @@
 var common = require("../../yy-common");
+var logger = common.logger;
 var Promise = require("bluebird");
 
 function Connection(conn) {
@@ -7,6 +8,7 @@ function Connection(conn) {
 module.exports = Connection;
 
 Connection.$proto("query", function(query) {
+    logger.log(query);
     var that = this;
     return new Promise(function(resolve, reject) {
         that.conn.query(query, function(err, rows, fields) {
