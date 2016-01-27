@@ -10,6 +10,7 @@ function Type(type) {
 var type = {
     integer: integer,
     varchar: varchar,
+    datetime: datetime,
     id: id,
 }
 
