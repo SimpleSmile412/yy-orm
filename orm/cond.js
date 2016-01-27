@@ -2,86 +2,194 @@ var common = require("../../yy-common");
 var logger = common.logger;
 
 var kit = require("./kit");
+var util = require("util");
 
-function Type(type) {
-    this._type = type;
+module.exports = {
+    Cond: Cond,
+    Limit: Limit,
+
+    and: and,
+    or: or,
+    eq: eq,
+    ne: ne,
+    gt: gt,
+    lt: lt,
+    gte: gte,
+    lte: lte,
+    inn: inn,
+    nin: nin,
+    limit: limit,
 }
 
-function hasLen(type) {
-    return type === "VARCHAR";
+function Cond() {}
+
+function extend(child, parent) {
+    var $ = function() {}
+    $.prototype = parent.prototype;
+    child.prototype = new $();
+    child.prototype.constructor = child;
 }
 
-function integer() {
-    return new Type("INTEGER");
+extend(And, Cond);
+extend(Or, Cond);
+extend(Eq, Cond);
+extend(Ne, Cond);
+extend(Gt, Cond);
+extend(Lt, Cond);
+extend(Gte, Cond);
+extend(Lte, Cond);
+extend(In, Cond);
+extend(NotIn, Cond);
+extend(Limit, Cond);
+
+function and() {
+    return new And(arguments.$array());
+};
+
+function or() {
+    return new Or(arguments.$array());
 }
 
-function varchar(len) {
-    var ret = new Type("VARCHAR");
-    if (typeof len === "number") {
-        ret.len(len);
-    } else {
-        ret.len(128);
-    }
-    return ret;
+function eq(c1, c2) {
+    return new Eq(c1, c2);
 }
 
-function id() {
-    return integer().key().auto();
+function ne(c1, c2) {
+    return new Ne(c1, c2);
 }
 
-var type = {
-    integer: integer,
-    varchar: varchar,
-    id: id,
+function gt(c1, c2) {
+    return new Gt(c1, c2);
 }
-module.exports = type;
 
-Type.$proto("toSql", function() {
+function lt(c2, c2) {
+    return new Lt(c1, c2);
+}
+
+function gte(c2, c2) {
+    return new Gte(c1, c2);
+}
+
+function lte(c2, c2) {
+    return new Lte(c1, c2);
+}
+
+function inn(v, arr) {
+    return new In(v, arr);
+}
+
+function nin(v, arr) {
+    return new NotIn(v, arr);
+}
+
+function limit(c, n, off) {
+    return new Limit(c, n, off);
+}
+////
+
+function And(conds) {
+    this.conds = conds;
+};
+And.prototype.toString = function() {
     var buf = [];
-    if (hasLen(this._type) && this._len > 0) {
-        buf.push(this._type + "(" + this._len + ")");
+    for (var i in this.conds) {
+        buf.push(this.conds[i].toString());
+    }
+    return "(" + buf.join(" AND ") + ")";
+};
+
+function Or(conds) {
+    this.conds = conds;
+};
+Or.prototype.toString = function() {
+    var buf = [];
+    for (var i in this.conds) {
+        buf.push(this.conds[i].toString());
+    }
+    return "(" + buf.join(" OR ") + ")";
+};
+
+function Eq(c1, c2) {
+    this.c1 = c1;
+    this.c2 = c2;
+}
+Eq.prototype.toString = function() {
+    return util.format("%s = %s", this.c1, kit.normalize(this.c2));
+}
+
+function Ne(c1, c2) {
+    this.c1 = c1;
+    this.c2 = c2;
+}
+Ne.prototype.toString = function() {
+    return util.format("%s <> %s", this.c1, kit.normalize(this.c2));
+}
+
+function Gt(c1, c2) {
+    this.c1 = c1;
+    this.c2 = c2;
+}
+Gt.prototype.toString = function() {
+    return util.format("%s > %s", this.c1, kit.normalize(this.c2));
+}
+
+function Lt(c1, c2) {
+    this.c1 = c1;
+    this.c2 = c2;
+}
+Lt.prototype.toString = function() {
+    return util.format("%s < %s", this.c1, kit.normalize(this.c2));
+}
+
+function Gte(c1, c2) {
+    this.c1 = c1;
+    this.c2 = c2;
+}
+Gte.prototype.toString = function() {
+    return util.format("%s >= %s", this.c1, kit.normalize(this.c2));
+}
+
+function Lte(c1, c2) {
+    this.c1 = c1;
+    this.c2 = c2;
+}
+Lte.prototype.toString = function() {
+    return util.format("%s <= %s", this.c1, kit.normalize(this.c2));
+}
+
+function In(v, arr) {
+    this.v = v;
+    this.arr = arr;
+}
+Lte.prototype.toString = function() {
+    var buf = [];
+    for (var i in this.arr) {
+        buf.push(kit.normalize(this.arr[i]));
+    }
+    return util.format("%s IN (%s)", this.v, buf.join(", "));
+}
+
+function NotIn(v, arr) {
+    this.v = v;
+    this.arr = arr;
+}
+Lte.prototype.toString = function() {
+    var buf = [];
+    for (var i in this.arr) {
+        buf.push(kit.normalize(this.arr[i]));
+    }
+    return util.format("%s NOT IN (%s)", this.v, buf.join(", "));
+}
+
+function Limit(c, n, off) {
+    this.c = c;
+    this.n = n;
+    this.off = off;
+}
+Limit.prototype.toString = function() {
+    if (this.off !== undefined) {
+        return util.format("%s LIMIT %d OFFSET %s", this.c, this.n, this.off);
     } else {
-        buf.push(this._type);
+        return util.format("%s LIMIT %d", this.c, this.n);
     }
-    if (this._key === true) {
-        buf.push("PRIMARY KEY");
-    }
-    if (this._require === true) {
-        buf.push("NOT NULL");
-    }
-    if (this._default !== undefined) {
-        buf.push("DEFAULT " + kit.normalize(this._default));
-    }
-    if (this._auto === true) {
-        buf.push("AUTO_INCREMENT");
-    }
-    return buf.join(" ");
-})
-
-Type.$proto("len", function(len) {
-    if (hasLen(this._type)) {
-        this._len = len;
-    }
-    return this;
-});
-Type.$proto("key", function() {
-    this._key = true;
-    return this;
-});
-Type.$proto("require", function() {
-    this._require = true;
-    return this;
-});
-Type.$proto("default", function(def) {
-    this._default = def;
-    return this;
-});
-Type.$proto("auto", function() {
-    this._auto = true;
-    return this;
-});
-
-Type.$proto("unique", function() {
-    this._unique = true;
-    return this;
-});
+}

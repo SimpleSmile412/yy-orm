@@ -1,8 +1,11 @@
 var common = require("../../yy-common");
 var logger = common.logger;
+
 var Connection = require("./connection");
 var Model = require("./model");
 var kit = require("./kit");
+var cond = require("./cond");
+
 var mysql = require("mysql");
 var Promise = require("bluebird");
 var util = require("util");
@@ -76,26 +79,27 @@ DB.$proto("query", function(query) {
     })
 });
 
-DB.$proto("select", function(table, cond) {
+DB.$proto("select", function(table, schemaCondStr) {
     var that = this;
-    if (cond) {
-        cond = cond.replace(/^where /i, '');
-        var sql = util.format("SELECT * FROM %s WHERE %s", table, cond);
+    if (schemaCondStr) {
+        schemaCondStr = schemaCondStr.replace(/^where /i, '');
+        var sql = util.format("SELECT * FROM %s WHERE %s", table, schemaCondStr);
     } else {
         var sql = "SELECT * FROM " + table;
     }
-    return this.query(sql).then(function(res) {
-        var model = that.models[table];
-        if (!model) {
-            return res;
-        }
-        var rows = res.rows;
-        var ret = [];
-        for (var i in rows) {
-            ret.push(model.toModel(rows[i]));
-        }
-        return ret;
-    });
+    return this.query(sql);
+    // .then(function(res) {
+    //     var model = that.models[table];
+    //     if (!model) {
+    //         return res;
+    //     }
+    //     var rows = res.rows;
+    //     var ret = [];
+    //     for (var i in rows) {
+    //         ret.push(model.toModel(rows[i]));
+    //     }
+    //     return ret;
+    // });
 });
 
 DB.$proto("create", function(table, obj) {
@@ -124,10 +128,39 @@ DB.$proto("create", function(table, obj) {
     })
 });
 
-DB.$proto("find", function(table, cond) {
-    if (typeof cond !== "object") {
-        var key = model.key;
-        var cond = util.format("%s = %s", key.col, kit.normalize(cond));
+DB.$proto("find", function(table, schemaCondValue) {
+    if (schemaCondValue instanceof cond.Cond) {
+        var ret = schemaCondValue;
+        if (!schemaCondValue instanceof cond.Limit) {
+            ret = cond.limit(ret, 1);
+        }
+    } else if (typeof schemaCondValue !== "object") {
+        var ret = cond.limit(cond.eq("id", schemaCondValue), 1);
+    } else {
+        var condArr = [];
+        for (var i in schemaCondValue) {
+            condArr.push(cond.eq(i, schemaCondValue[i]));
+        }
+        var ret = cond.limit(cond.and(condArr), 1);
     }
-    return this.select(table, cond);
+    var condStr = ret.toString();
+    return this.select(table, condStr).then(function(res) {
+        return res[0];
+    });
+});
+
+DB.$proto("all", function(table, schemaCondValue) {
+    if (schemaCondValue instanceof cond.Cond) {
+        var ret = schemaCondValue;
+    } else if (typeof schemaCondValue !== "object") {
+        var ret = cond.eq("id", schemaCondValue);
+    } else {
+        var condArr = [];
+        for (var i in schemaCondValue) {
+            condArr.push(cond.eq(i, schemaCondValue[i]));
+        }
+        var ret = cond.and(condArr);
+    }
+    var condStr = ret.toString();
+    return this.select(table, condStr);
 });

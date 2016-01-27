@@ -2,8 +2,18 @@ var common = require("../../yy-common");
 
 
 function normalize(value) {
-    if (typeof value === "string") {
+    if (value instanceof Date) {
+        return "'" + value.$format() + "'";
+    } else if (typeof value === "string") {
         return "'" + value + "'";
+    } else {
+        return value;
+    }
+}
+
+function objectify(type, value) {
+    if (type === "DATETIME") {
+        return Date.$parse(value);
     } else {
         return value;
     }
