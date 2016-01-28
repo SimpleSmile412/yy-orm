@@ -9,28 +9,20 @@ function Transaction(conn, db) {
 
 module.exports = Transaction;
 
-Transaction.$proto("begin", function() {
-    var sql = "BEGIN";
-    return this.conn.query(sql);
-});
-
 Transaction.$proto("query", function(sql) {
-    var that = this;
     return this.conn.query(sql);
 });
 
-Transaction.$proto("commit", function(sql) {
-    var sql = "COMMIT";
+Transaction.$proto("commit", function() {
     var that = this;
-    return this.conn.query(sql).finally(function() {
+    return this.conn.commit().finally(function() {
         that.conn.release();
     });
 });
 
-Transaction.$proto("rollback", function(sql) {
-    var sql = "ROLLBACK";
+Transaction.$proto("rollback", function() {
     var that = this;
-    return this.conn.query(sql).finally(function() {
+    return this.conn.rollback().finally(function() {
         that.conn.release();
     });
 });

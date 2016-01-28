@@ -7,11 +7,12 @@ function Connection(conn) {
 }
 module.exports = Connection;
 
-Connection.$proto("query", function(query) {
-    logger.log(query);
+Connection.$proto("query", function(query, values) {
+    var info = values ? query + " " + JSON.stringify(values) : query;
+    logger.log(info);
     var that = this;
     return new Promise(function(resolve, reject) {
-        that.conn.query(query, function(err, rows, fields) {
+        that.conn.query(query, values, function(err, rows, fields) {
             if (err) {
                 reject(err);
             } else {
@@ -23,6 +24,45 @@ Connection.$proto("query", function(query) {
         });
     });
 });
+
+Connection.$proto("beginTransaction", function() {
+    logger.log("START TRANSACTION");
+    var that = this;
+    return new Promise(function(resolve, reject) {
+        that.conn.beginTransaction(function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+});
+
+Connection.$proto("commit", function() {
+    logger.log("COMMIT");
+    var that = this;
+    return new Promise(function(resolve, reject) {
+        that.conn.commit(function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+});
+
+Connection.$proto("rollback", function() {
+    logger.log("ROLLBACK");
+    var that = this;
+    return new Promise(function(resolve, reject) {
+        that.conn.rollback(function() {
+            resolve();
+        });
+    });
+});
+
 Connection.$proto("release", function(query) {
     return this.conn.release();
 });

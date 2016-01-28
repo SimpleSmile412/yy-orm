@@ -82,12 +82,14 @@ DB.$proto("rebuild", function() {
     })
 })
 
-DB.$proto("query", function(query, tx) {
+DB.$proto("query", function(query, values, tx) {
+    values = values instanceof Transaction ? undefined : values;
+    tx = values instanceof Transaction ? values : tx;
     if (tx) {
-        return tx.query(query);
+        return tx.query(query, values);
     }
     return this.getConnection().then(function(conn) {
-        return conn.query(query).finally(function() {
+        return conn.query(query, values).finally(function() {
             conn.release();
         });
     })
@@ -114,6 +116,15 @@ DB.$proto("select", function(table, schemaCondStr, tx) {
     //     }
     //     return ret;
     // });
+});
+
+DB.$proto("insert", function(table, obj, tx) {
+    var that = this;
+    return Promise.try(function() {
+        var fmt = "INSERT INTO %s SET ?"; //VALUES(%s)";
+        var sql = util.format(fmt, table);
+        return that.query(sql, obj, tx);
+    })
 });
 
 DB.$proto("create", function(table, obj, tx) {
@@ -165,7 +176,7 @@ DB.$proto("beginTransaction", function() {
     var that = this;
     return this.getConnection().then(function(conn) {
         tx = new Transaction(conn, that);
-        return tx.begin().then(function(res) {
+        return conn.beginTransaction().then(function(res) {
             return tx;
         });
     });

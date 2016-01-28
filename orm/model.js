@@ -2,51 +2,55 @@ var common = require("../../yy-common");
 var logger = common.logger;
 var util = require("util");
 
-// def: field -> type(_field, _col)
-// rdef: col -> type(_field, _col)
+// fields: field -> type(_field, _col)
+// cols: col -> type(_field, _col)
 function Model(table, def, db) {
     var parsed = parseDef(def);
     this.table = table;
     this.db = db;
-    this.def = parsed.def;
-    this.rdef = parsed.rdef;
+    this.fields = parsed.fields;
+    this.cols = parsed.cols;
     this.key = parsed.key;
     this.unique = parsed.unique;
 }
 module.exports = Model;
 
-function parseDef(def) {
+function parseDef(fields) {
     var key = undefined;
-    var rdef = {};
+    var cols = {};
     var unique = [];
-    for (var field in def) {
-        var col = def[field]._col || field;
-        def[field]._field = field;
-        def[field]._col = col;
-        rdef[col] = def[field];
-        if (def[field]._key === true) {
-            key = def[field];
+    for (var field in fields) {
+        var col = fields[field]._col || field;
+        fields[field]._field = field;
+        fields[field]._col = col;
+        cols[col] = fields[field];
+        if (fields[field]._key === true) {
+            key = fields[field];
         }
-        if (def[field]._unique === true) {
-            unique.push(def[field]);
+        if (fields[field]._unique === true) {
+            unique.push(fields[field]);
         }
     }
     return {
         key: key,
         unique: unique,
-        def: def,
-        rdef: rdef,
+        fields: fields,
+        cols: cols,
     }
 }
 
+Model.$proto("getCol", function(field) {
+
+});
+
 Model.$proto("toSql", function() {
     var table = this.table;
-    var def = this.def;
+    var fields = this.fields;
     var unique = this.unique;
     var fmt = "CREATE TABLE IF NOT EXISTS %s(%s)";
     var buf = [];
-    for (var field in def) {
-        buf.push(def[field]._col + " " + def[field].toSql());
+    for (var field in fields) {
+        buf.push(fields[field]._col + " " + fields[field].toSql());
     }
     for (var i in unique) {
         buf.push("UNIQUE(" + unique[i]._col + ")");
@@ -56,21 +60,21 @@ Model.$proto("toSql", function() {
     return sql;
 });
 Model.$proto("toObj", function(row) {
-    var def = this.def;
+    var fields = this.fields;
     var ret = {};
-    for (var field in this.def) {
-        if (row[def[field]._col] !== undefined) {
-            ret[field] = row[def[field]._col];
+    for (var field in this.fields) {
+        if (row[fields[field]._col] !== undefined) {
+            ret[field] = row[fields[field]._col];
         }
     }
     return ret;
 });
 Model.$proto("toRow", function(obj) {
-    var def = this.def;
+    var fields = this.fields;
     var ret = {};
-    for (var field in this.def) {
+    for (var field in this.fields) {
         if (obj[field] !== undefined) {
-            ret[def[field]._col] = obj[field];
+            ret[fields[field]._col] = obj[field];
         }
     }
     return ret;
@@ -98,7 +102,7 @@ Model.$proto("find", function(cond, tx) {
 
     function filter(cond) {
         if (cond instanceof cond.type.OpCond) {
-            cond.col = model.rdef[cond.col]._col;
+            cond.col = model.cols[cond.col]._col;
         } else if (cond instanceof cond.type.WrapCond) {
             var conds = cond.conds;
             for (var i = 0; i < conds.length; i++) {
