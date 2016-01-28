@@ -75,6 +75,13 @@ DB.$proto("drop", function() {
     return result;
 });
 
+DB.$proto("rebuild", function() {
+    var that = this;
+    return this.drop().then(function() {
+        return that.sync();
+    })
+})
+
 DB.$proto("query", function(query, tx) {
     if (tx) {
         return tx.query(query);

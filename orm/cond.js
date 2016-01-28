@@ -4,7 +4,7 @@ var logger = common.logger;
 var kit = require("./kit");
 var util = require("util");
 
-module.exports = {
+var cond = {
     Cond: Cond,
     Limit: Limit,
 
@@ -21,7 +21,34 @@ module.exports = {
     limit: limit,
 }
 
-function Cond() {}
+module.exports = cond;
+
+function Cond() {
+
+}
+
+function OpCond() {
+
+}
+
+function WrapCond(){
+    
+}
+
+function parse(c) {
+    if (c instanceof Cond) {
+        return c;
+    } else if (typeof c !== "object") {
+        return cond.eq("$id", kit.normalize(c));
+    } else {
+        for (var i in c) {
+            var condArr = [];
+            if (c.hasOwnProperty(i)) {
+                condArr.push(cond.eq(i, kit.normalize(c)));
+            }
+        }
+    }
+}
 
 function extend(child, parent) {
     var $ = function() {}
@@ -30,17 +57,17 @@ function extend(child, parent) {
     child.prototype.constructor = child;
 }
 
-extend(And, Cond);
-extend(Or, Cond);
-extend(Eq, Cond);
-extend(Ne, Cond);
-extend(Gt, Cond);
-extend(Lt, Cond);
-extend(Gte, Cond);
-extend(Lte, Cond);
-extend(In, Cond);
-extend(NotIn, Cond);
-extend(Limit, Cond);
+util.inherits(And, Cond);
+util.inherits(Or, Cond);
+util.inherits(Eq, Cond);
+util.inherits(Ne, Cond);
+util.inherits(Gt, Cond);
+util.inherits(Lt, Cond);
+util.inherits(Gte, Cond);
+util.inherits(Lte, Cond);
+util.inherits(In, Cond);
+util.inherits(NotIn, Cond);
+util.inherits(Limit, Cond);
 
 function and() {
     return new And(arguments.$array());
@@ -50,36 +77,36 @@ function or() {
     return new Or(arguments.$array());
 }
 
-function eq(c1, c2) {
-    return new Eq(c1, c2);
+function eq(col, val) {
+    return new Eq(col, val);
 }
 
-function ne(c1, c2) {
-    return new Ne(c1, c2);
+function ne(col, val) {
+    return new Ne(col, val);
 }
 
-function gt(c1, c2) {
-    return new Gt(c1, c2);
+function gt(col, val) {
+    return new Gt(col, val);
 }
 
-function lt(c2, c2) {
-    return new Lt(c1, c2);
+function lt(col, val) {
+    return new Lt(col, val);
 }
 
-function gte(c2, c2) {
-    return new Gte(c1, c2);
+function gte(col, val) {
+    return new Gte(col, val);
 }
 
-function lte(c2, c2) {
-    return new Lte(c1, c2);
+function lte(col, val) {
+    return new Lte(col, val);
 }
 
-function inn(v, arr) {
-    return new In(v, arr);
+function inn(col, arr) {
+    return new In(col, arr);
 }
 
-function nin(v, arr) {
-    return new NotIn(v, arr);
+function nin(col, arr) {
+    return new NotIn(col, arr);
 }
 
 function limit(c, n, off) {
@@ -109,52 +136,52 @@ Or.prototype.toString = function() {
     return "(" + buf.join(" OR ") + ")";
 };
 
-function Eq(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+function Eq(col, val) {
+    this.col = col;
+    this.val = val;
 }
 Eq.prototype.toString = function() {
-    return util.format("%s = %s", this.c1, kit.normalize(this.c2));
+    return util.format("%s = %s", this.col, kit.normalize(this.val));
 }
 
-function Ne(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+function Ne(col, val) {
+    this.col = col;
+    this.val = val;
 }
 Ne.prototype.toString = function() {
-    return util.format("%s <> %s", this.c1, kit.normalize(this.c2));
+    return util.format("%s <> %s", this.col, kit.normalize(this.val));
 }
 
-function Gt(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+function Gt(col, val) {
+    this.col = col;
+    this.val = val;
 }
 Gt.prototype.toString = function() {
-    return util.format("%s > %s", this.c1, kit.normalize(this.c2));
+    return util.format("%s > %s", this.col, kit.normalize(this.val));
 }
 
-function Lt(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+function Lt(col, val) {
+    this.col = col;
+    this.val = val;
 }
 Lt.prototype.toString = function() {
-    return util.format("%s < %s", this.c1, kit.normalize(this.c2));
+    return util.format("%s < %s", this.col, kit.normalize(this.val));
 }
 
-function Gte(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+function Gte(col, val) {
+    this.col = col;
+    this.val = val;
 }
 Gte.prototype.toString = function() {
-    return util.format("%s >= %s", this.c1, kit.normalize(this.c2));
+    return util.format("%s >= %s", this.col, kit.normalize(this.val));
 }
 
-function Lte(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+function Lte(col, val) {
+    this.col = col;
+    this.val = val;
 }
 Lte.prototype.toString = function() {
-    return util.format("%s <= %s", this.c1, kit.normalize(this.c2));
+    return util.format("%s <= %s", this.col, kit.normalize(this.val));
 }
 
 function In(v, arr) {

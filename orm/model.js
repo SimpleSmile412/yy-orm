@@ -86,3 +86,6 @@ Model.$proto("create", function(obj, tx) {
         return ret;
     })
 });
+Model.$proto("find", function(cond, tx){
+    
+})

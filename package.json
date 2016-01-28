@@ -4,6 +4,7 @@
   "description": "",
   "main": "orm.js",
   "dependencies": {
+    "bluebird": "^3.1.5",
     "mysql": "^2.10.2"
   },
   "devDependencies": {},
