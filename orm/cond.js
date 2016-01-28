@@ -5,8 +5,15 @@ var kit = require("./kit");
 var util = require("util");
 
 var cond = {
-    Cond: Cond,
-    Limit: Limit,
+    type: {
+        Cond: Cond,
+        OpCond: OpCond,
+        WrapCond: WrapCond,
+        Limit: Limit,
+    },
+    tool: {
+        parseToCondObj: parseToCondObj,
+    },
 
     and: and,
     or: or,
@@ -30,12 +37,14 @@ function Cond() {
 function OpCond() {
 
 }
+util.inherits(OpCond, Cond);
 
-function WrapCond(){
-    
+function WrapCond() {
+
 }
+util.inherits(WrapCond, Cond);
 
-function parse(c) {
+function parseToCondObj(c) {
     if (c instanceof Cond) {
         return c;
     } else if (typeof c !== "object") {
@@ -57,17 +66,18 @@ function extend(child, parent) {
     child.prototype.constructor = child;
 }
 
-util.inherits(And, Cond);
-util.inherits(Or, Cond);
-util.inherits(Eq, Cond);
-util.inherits(Ne, Cond);
-util.inherits(Gt, Cond);
-util.inherits(Lt, Cond);
-util.inherits(Gte, Cond);
-util.inherits(Lte, Cond);
-util.inherits(In, Cond);
-util.inherits(NotIn, Cond);
-util.inherits(Limit, Cond);
+util.inherits(And, OpCond);
+util.inherits(Or, OpCond);
+util.inherits(Eq, OpCond);
+util.inherits(Ne, OpCond);
+util.inherits(Gt, OpCond);
+util.inherits(Lt, OpCond);
+util.inherits(Gte, OpCond);
+util.inherits(Lte, OpCond);
+
+util.inherits(In, WrapCond);
+util.inherits(NotIn, WrapCond);
+util.inherits(Limit, WrapCond);
 
 function and() {
     return new And(arguments.$array());
@@ -184,8 +194,8 @@ Lte.prototype.toString = function() {
     return util.format("%s <= %s", this.col, kit.normalize(this.val));
 }
 
-function In(v, arr) {
-    this.v = v;
+function In(col, arr) {
+    this.col = col;
     this.arr = arr;
 }
 Lte.prototype.toString = function() {
@@ -193,11 +203,11 @@ Lte.prototype.toString = function() {
     for (var i in this.arr) {
         buf.push(kit.normalize(this.arr[i]));
     }
-    return util.format("%s IN (%s)", this.v, buf.join(", "));
+    return util.format("%s IN (%s)", this.col, buf.join(", "));
 }
 
-function NotIn(v, arr) {
-    this.v = v;
+function NotIn(col, arr) {
+    this.col = col;
     this.arr = arr;
 }
 Lte.prototype.toString = function() {
@@ -205,18 +215,18 @@ Lte.prototype.toString = function() {
     for (var i in this.arr) {
         buf.push(kit.normalize(this.arr[i]));
     }
-    return util.format("%s NOT IN (%s)", this.v, buf.join(", "));
+    return util.format("%s NOT IN (%s)", this.col, buf.join(", "));
 }
 
-function Limit(c, n, off) {
-    this.c = c;
+function Limit(cond, n, off) {
+    this.cond = cond;
     this.n = n;
     this.off = off;
 }
 Limit.prototype.toString = function() {
     if (this.off !== undefined) {
-        return util.format("%s LIMIT %d OFFSET %s", this.c, this.n, this.off);
+        return util.format("%s LIMIT %d OFFSET %s", this.cond, this.n, this.off);
     } else {
-        return util.format("%s LIMIT %d", this.c, this.n);
+        return util.format("%s LIMIT %d", this.cond, this.n);
     }
 }

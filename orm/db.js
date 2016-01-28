@@ -143,40 +143,22 @@ DB.$proto("create", function(table, obj, tx) {
 });
 
 DB.$proto("find", function(table, schemaCondValue, tx) {
-    if (schemaCondValue instanceof cond.Cond) {
-        var ret = schemaCondValue;
-        if (!schemaCondValue instanceof cond.Limit) {
-            ret = cond.limit(ret, 1);
-        }
-    } else if (typeof schemaCondValue !== "object") {
-        var ret = cond.limit(cond.eq("id", schemaCondValue), 1);
-    } else {
-        var condArr = [];
-        for (var i in schemaCondValue) {
-            condArr.push(cond.eq(i, schemaCondValue[i]));
-        }
-        var ret = cond.limit(cond.and(condArr), 1);
+    var ret = cond.tool.parseToCondObj(schemaCondValue);
+    if (ret instanceof cond.type.Limit === false) {
+        ret = cond.limit(ret, 1);
     }
     var condStr = ret.toString();
     return this.select(table, condStr, tx).then(function(res) {
-        return res[0];
+        return res.rows[0];
     });
 });
 
 DB.$proto("all", function(table, schemaCondValue, tx) {
-    if (schemaCondValue instanceof cond.Cond) {
-        var ret = schemaCondValue;
-    } else if (typeof schemaCondValue !== "object") {
-        var ret = cond.eq("id", schemaCondValue);
-    } else {
-        var condArr = [];
-        for (var i in schemaCondValue) {
-            condArr.push(cond.eq(i, schemaCondValue[i]));
-        }
-        var ret = cond.and(condArr);
-    }
+    var ret = cond.tool.parseToCondObj(schemaCondValue);
     var condStr = ret.toString();
-    return this.select(table, condStr, tx);
+    return this.select(table, condStr, tx).then(function(res) {
+        return res.rows;
+    });
 });
 
 DB.$proto("beginTransaction", function() {
@@ -184,7 +166,6 @@ DB.$proto("beginTransaction", function() {
     return this.getConnection().then(function(conn) {
         tx = new Transaction(conn, that);
         return tx.begin().then(function(res) {
-            logger.log(res);
             return tx;
         });
     });

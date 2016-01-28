@@ -2,11 +2,14 @@ var common = require("../../yy-common");
 var logger = common.logger;
 var util = require("util");
 
+// def: field -> type(_field, _col)
+// rdef: col -> type(_field, _col)
 function Model(table, def, db) {
     var parsed = parseDef(def);
     this.table = table;
     this.db = db;
     this.def = parsed.def;
+    this.rdef = parsed.rdef;
     this.key = parsed.key;
     this.unique = parsed.unique;
 }
@@ -14,10 +17,13 @@ module.exports = Model;
 
 function parseDef(def) {
     var key = undefined;
+    var rdef = {};
     var unique = [];
     for (var field in def) {
+        var col = def[field]._col || field;
         def[field]._field = field;
-        def[field]._col = def[field]._col || field;
+        def[field]._col = col;
+        rdef[col] = def[field];
         if (def[field]._key === true) {
             key = def[field];
         }
@@ -29,6 +35,7 @@ function parseDef(def) {
         key: key,
         unique: unique,
         def: def,
+        rdef: rdef,
     }
 }
 
@@ -86,6 +93,23 @@ Model.$proto("create", function(obj, tx) {
         return ret;
     })
 });
-Model.$proto("find", function(cond, tx){
-    
+Model.$proto("find", function(cond, tx) {
+    var model = this;
+
+    function filter(cond) {
+        if (cond instanceof cond.type.OpCond) {
+            cond.col = model.rdef[cond.col]._col;
+        } else if (cond instanceof cond.type.WrapCond) {
+            var conds = cond.conds;
+            for (var i = 0; i < conds.length; i++) {
+                cond.conds[i] = filter(conds[i]);
+            }
+        }
+        return cond;
+    }
+    cond = filter(cond);
+    return this.db.find(this.table, cond, tx).then(function(res) {
+        logger.log(res);
+        return res;
+    });
 })
