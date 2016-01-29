@@ -19,14 +19,22 @@ describe('Cond', function() {
         belong.should.eql(true);
         done();
     });
-    it('And Eq', function(done) {
+    it('And/Eq', function(done) {
         var c = condTool.parseToCondObj({
             a: "asdf",
         });
-        var belong = c.cond[0] instanceof condType.OpCond;
+        var belong = c.cond instanceof condType.OpCond;
         belong.should.be.ok;
         s = c.toSql();
-        s.should.eql(`(a = 'asdf')`);
+        s.should.eql(`a = 'asdf'`);
+        done();
+    });
+    it('Parse', function(done) {
+        var c = condTool.parseToCondObj({
+            a: "asdf",
+            b: 1,
+        });
+        c.cond.length.should.eql(2);
         done();
     });
 });

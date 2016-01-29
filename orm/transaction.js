@@ -1,5 +1,6 @@
 var common = require("../../yy-common");
 var logger = common.logger;
+var Model = require("./model");
 
 
 function Transaction(conn, db) {
@@ -9,24 +10,48 @@ function Transaction(conn, db) {
 
 module.exports = Transaction;
 
-Transaction.$proto("query", function(sql) {
+Transaction.prototype.query = function(sql) {
     return this.conn.query(sql);
-});
+}
 
-Transaction.$proto("commit", function() {
+Transaction.prototype.commit = function() {
     var that = this;
     return this.conn.commit().finally(function() {
         that.conn.release();
     });
-});
+}
 
-Transaction.$proto("rollback", function() {
+Transaction.prototype.rollback = function() {
     var that = this;
     return this.conn.rollback().finally(function() {
         that.conn.release();
     });
-});
+}
 
-Transaction.$proto("create", function(table, obj) {
+Transaction.prototype.create = function(table, obj) {
     return this.db.create(table, obj, this);
-});
+}
+
+Transaction.prototype.insert = function(table, obj) {
+    if (table instanceof Model) {
+        return table.insert(obj, this);
+    } else {
+        return this.db.insert(table, obj, this);
+    }
+}
+
+Transaction.prototype.get = function(table, obj) {
+    if (table instanceof Model) {
+        return table.get(obj, this);
+    } else {
+        return this.db.get(table, obj, this);
+    }
+}
+
+Transaction.prototype.all = function(table, obj) {
+    if (table instanceof Model) {
+        return table.all(obj, this);
+    } else {
+        return this.db.all(table, obj, this);
+    }
+}

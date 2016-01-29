@@ -7,8 +7,6 @@ var cond = orm.cond;
 
 var logger = console;
 
-
-
 describe('DB Transaction', function() {
     var db = orm.create({
         host: 'localhost',
@@ -75,12 +73,20 @@ describe('DB Search', function() {
                 t: 2,
             })
         }).then(function(res) {
+            return Page.create({
+                value: "asdf",
+                t: 2,
+            })
+        }).then(function(res) {
             return db.get("page", cond.eq("value", "asdf"));
         }).then(function(res) {
             res.value.should.eql("asdf");
             res.t.should.eql(1);
         }).then(function() {
-            return db.all("page", cond.eq("value", "asdf"));
+            return db.all("page", {
+                value: "asdf",
+                t: 2,
+            });
         }).then(function(res) {
             res.length.should.eql(2);
         }).catch(function(err) {
@@ -94,7 +100,7 @@ describe('DB Search', function() {
     });
 });
 
-describe('DB Insert', function() {
+describe('DB Insert Get All Update', function() {
     var db = orm.create({
         host: 'localhost',
         user: 'root',
@@ -128,6 +134,19 @@ describe('DB Insert', function() {
             return db.all("page", cond.eq("value", "asdf"));
         }).then(function(res) {
             res.length.should.eql(2);
+            return db.update("page", {
+                value: "ok",
+            }, {
+                t: 2
+            });
+        }).then(function(res) {
+            res.changedRows.should.eql(1);
+            res.affectedRows.should.eql(1);
+            return db.get("page", {
+                t: 2
+            });
+        }).then(function(res) {
+            res.value.should.eql("ok");
         }).catch(function(err) {
             false.should.be.ok;
             logger.error(err);

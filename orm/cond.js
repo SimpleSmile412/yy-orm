@@ -11,6 +11,8 @@ var cond = {
         OpCond: OpCond,
         WrapCondSingle: WrapCondSingle,
         WrapCondMulti: WrapCondMulti,
+        And: And,
+        Or: Or,
         Limit: Limit,
     },
     tool: {
@@ -62,8 +64,8 @@ function parseToCondObj(c) {
     } else if (typeof c !== "object") {
         return undefined;
     } else {
+        var condArr = [];
         for (var i in c) {
-            var condArr = [];
             if (c.hasOwnProperty(i)) {
                 condArr.push(cond.eq(i, c[i]));
             }
@@ -89,6 +91,9 @@ util.inherits(Asc, WrapCondSingle);
 util.inherits(Desc, WrapCondSingle);
 
 function and() {
+    if (arguments.length === 1) {
+        return arguments[0];
+    }
     return new And(arguments.$array());
 };
 
@@ -151,9 +156,14 @@ function And(c) {
 And.prototype.toSql = function() {
     var buf = [];
     for (var i in this.cond) {
-        buf.push(this.cond[i].toSql());
+        var c = this.cond[i];
+        if (c instanceof OpCond === false) {
+            buf.push("(" + c.toSql + ")");
+        } else {
+            buf.push(c.toSql());
+        }
     }
-    return "(" + buf.join(" AND ") + ")";
+    return buf.join(" AND ");
 };
 
 function Or(c) {

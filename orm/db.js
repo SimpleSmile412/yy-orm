@@ -19,7 +19,7 @@ function DB(opt) {
 }
 module.exports = DB;
 
-DB.$proto("getConnection", function() {
+DB.prototype.getConnection = function() {
     var that = this;
     return new Promise(function(resolve, reject) {
         that.pool.getConnection(function(err, conn) {
@@ -30,9 +30,8 @@ DB.$proto("getConnection", function() {
             }
         })
     });
-});
-
-DB.$proto("close", function() {
+}
+DB.prototype.close = function() {
     var that = this;
     return new Promise(function(resolve, reject) {
         that.pool.end(function(err) {
@@ -43,15 +42,15 @@ DB.$proto("close", function() {
             }
         })
     })
-});
+}
 
-DB.$proto("define", function(table, def) {
+DB.prototype.define = function(table, def) {
     var ret = new Model(table, def, this);
     this.models[table] = ret;
     return ret;
-});
+}
 
-DB.$proto("sync", function() {
+DB.prototype.sync = function() {
     var result = Promise.resolve();
     for (var table in this.models) {
         var model = this.models[table];
@@ -62,9 +61,9 @@ DB.$proto("sync", function() {
         }(model);
     }
     return result;
-});
+}
 
-DB.$proto("drop", function() {
+DB.prototype.drop = function() {
     var result = Promise.resolve();
     for (var table in this.models) {
         var model = this.models[table];
@@ -75,16 +74,26 @@ DB.$proto("drop", function() {
         }(model);
     }
     return result;
-});
+}
 
-DB.$proto("rebuild", function() {
+DB.prototype.rebuild = function() {
     var that = this;
     return this.drop().then(function() {
         return that.sync();
     })
-})
+}
 
-DB.$proto("query", function(query, values, tx) {
+DB.prototype.beginTransaction = function() {
+    var that = this;
+    return this.getConnection().then(function(conn) {
+        tx = new Transaction(conn, that);
+        return conn.beginTransaction().then(function(res) {
+            return tx;
+        });
+    });
+}
+
+DB.prototype.query = function(query, values, tx) {
     values = values instanceof Transaction ? undefined : values;
     tx = values instanceof Transaction ? values : tx;
     if (tx) {
@@ -95,9 +104,9 @@ DB.$proto("query", function(query, values, tx) {
             conn.release();
         });
     })
-});
+}
 
-DB.$proto("select", function(table, c, tx) {
+DB.prototype.select = function(table, c, tx) {
     var that = this;
     c = condTool.parseToCondObj(c);
     if (c) {
@@ -107,18 +116,18 @@ DB.$proto("select", function(table, c, tx) {
         var sql = "SELECT * FROM " + table;
     }
     return this.query(sql, tx);
-});
+}
 
-DB.$proto("insert", function(table, obj, tx) {
+DB.prototype.insert = function(table, obj, tx) {
     var that = this;
     return Promise.try(function() {
         var fmt = "INSERT INTO ?? SET ?"; //VALUES(%s)";
         var sql = mysql.format(fmt, [table, obj]);
         return that.query(sql, tx);
     })
-});
+}
 
-DB.$proto("create", function(table, obj, tx) {
+DB.prototype.create = function(table, obj, tx) {
     var that = this;
     return Promise.try(function() {
         var model = that.models[table];
@@ -142,9 +151,23 @@ DB.$proto("create", function(table, obj, tx) {
         var sql = util.format(fmt, table, col, value);
         return that.query(sql, tx);
     })
-});
+}
 
-DB.$proto("get", function(table, c, tx) {
+DB.prototype.update = function(table, obj, c, tx) {
+    c = condTool.parseToCondObj(c);
+    if (c === undefined) {
+        var fmt = "UPDATE ?? SET ?";
+        var sql = mysql.format(fmt, [table, obj]);
+    } else {
+        var fmt = "UPDATE ?? SET ? WHERE " + c.toSql();
+        var sql = mysql.format(fmt, [table, obj]);
+    }
+    return this.query(sql, tx).then(function(res) {
+        return res.rows;
+    });
+}
+
+DB.prototype.get = function(table, c, tx) {
     c = condTool.parseToCondObj(c);
     if (c instanceof condType.Limit === false) {
         c = cond.limit(c, 1);
@@ -152,20 +175,10 @@ DB.$proto("get", function(table, c, tx) {
     return this.select(table, c, tx).then(function(res) {
         return res.rows[0];
     });
-});
+}
 
-DB.$proto("all", function(table, c, tx) {
+DB.prototype.all = function(table, c, tx) {
     return this.select(table, c, tx).then(function(res) {
         return res.rows;
     });
-});
-
-DB.$proto("beginTransaction", function() {
-    var that = this;
-    return this.getConnection().then(function(conn) {
-        tx = new Transaction(conn, that);
-        return conn.beginTransaction().then(function(res) {
-            return tx;
-        });
-    });
-});
+}
