@@ -5,8 +5,7 @@ insert
 
 update
 
-get
-select
+get/select
 
 delete
 
