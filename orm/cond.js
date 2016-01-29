@@ -40,6 +40,21 @@ module.exports = cond;
 function Cond() {
 
 }
+Cond.prototype.and = function(c) {
+    return cond.and(this, c);
+}
+Cond.prototype.or = function(c) {
+    return cond.or(this, c);
+}
+Cond.prototype.limit = function(n, off) {
+    return cond.limit(this, n, off);
+}
+Cond.prototype.asc = function(col) {
+    return cond.asc(this, col);
+}
+Cond.prototype.desc = function(col) {
+    return cond.desc(this, col);
+}
 
 function OpCond() {
 
@@ -141,12 +156,12 @@ function limit(c, n, off) {
     return new Limit(c, n, off);
 }
 
-function asc(col) {
-    return new Asc(col);
+function asc(c, col) {
+    return new Asc(c, col);
 }
 
-function desc(col) {
-    return new Desc(col);
+function desc(c, col) {
+    return new Desc(c, col);
 }
 ////
 
@@ -276,7 +291,7 @@ function Asc(c, col) {
 }
 Asc.prototype.toSql = function() {
     var col = Array.isArray(this.col) ? this.col : [this.col];
-    return mysql.format("?? ORDER BY ?? ASC", this.cond.toSql(), col);
+    return mysql.format("?? ORDER BY ?? ASC", [this.cond.toSql(), col]);
 }
 
 function Desc(c, col) {
@@ -285,6 +300,6 @@ function Desc(c, col) {
 }
 Desc.prototype.toSql = function() {
     var col = Array.isArray(this.col) ? this.col : [this.col];
-    return mysql.format("?? ORDER BY ?? DESC", this.cond.toSql(), col);
+    return mysql.format("?? ORDER BY ?? DESC", [this.cond.toSql(), col]);
 
 }

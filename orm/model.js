@@ -19,8 +19,9 @@ function Model(table, def, db) {
 }
 module.exports = Model;
 
-function parseDef(fields) {
-    var key = undefined;
+function parseDef(fields, ext) {
+    ext = ext || {};
+    var key = ext.key;
     var cols = {};
     var unique = [];
     for (var field in fields) {
@@ -120,11 +121,10 @@ Model.$proto("insert", function(obj, tx) {
     var row = this.toRow(obj);
     var that = this;
     return this.db.insert(this.table, row, tx).then(function(res) {
-        var ret = that.toObj(row);
         if (that.key._auto) {
-            ret[that.key._field] = res.rows.insertId;
+            obj[that.key._field] = res.rows.insertId;
         }
-        return ret;
+        return obj;
     })
 });
 

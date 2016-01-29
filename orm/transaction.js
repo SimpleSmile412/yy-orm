@@ -40,6 +40,14 @@ Transaction.prototype.insert = function(table, obj) {
     }
 }
 
+Transaction.prototype.update = function(table, obj, c) {
+    if (table instanceof Model) {
+        return table.update(obj, c, this);
+    } else {
+        return this.db.update(table, obj, c, this);
+    }
+}
+
 Transaction.prototype.get = function(table, obj) {
     if (table instanceof Model) {
         return table.get(obj, this);
@@ -53,5 +61,13 @@ Transaction.prototype.all = function(table, obj) {
         return table.all(obj, this);
     } else {
         return this.db.all(table, obj, this);
+    }
+}
+
+Transaction.prototype.delete = function(table, c) {
+    if (table instanceof Model) {
+        return table.delete(obj, c, this);
+    } else {
+        return this.db.delete(table, c, this);
     }
 }
