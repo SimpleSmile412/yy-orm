@@ -10,3 +10,5 @@ get/select
 delete
 
 batch
+
+count
