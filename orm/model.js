@@ -134,8 +134,12 @@ Model.$proto("insert", function(obj, tx) {
 
 Model.$proto("get", function(c, tx) {
     var model = this;
-    var c = condTool.parseToCondObj(c);
-    c = this.modelizeCondition(c);
+    if (typeof c !== "object") {
+        c = cond.eq(model.key._col, c);
+    } else {
+        c = condTool.parseToCondObj(c);
+        c = this.modelizeCondition(c);
+    }
     return this.db.get(this.table, c, tx).then(function(res) {
         return model.toObj(res);
     });

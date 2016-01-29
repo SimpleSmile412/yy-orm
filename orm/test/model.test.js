@@ -21,7 +21,7 @@ describe('Model Insert And Get', function() {
         id: type.id(),
         value: type.varchar("hi", 32),
     })
-    it('Transaction Rollback', function(done) {
+    it('Insert Get All Get(ID)', function(done) {
         Promise.try(function() {
             return db.rebuild();
         }).then(function(res) {
@@ -44,6 +44,11 @@ describe('Model Insert And Get', function() {
         }).then(function(res) {
             res.length.should.eql(2);
             res[1].value.should.eql("h2");
+            return Page.get(1);
+        }).then(function(res) {
+            res.value.should.eql("hello");
+        }).then(function(res) {
+
         }).catch(function(err) {
             logger.log(err);
             logger.log(err.stack);
