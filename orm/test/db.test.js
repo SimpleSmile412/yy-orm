@@ -89,6 +89,13 @@ describe('DB Search', function() {
             });
         }).then(function(res) {
             res.length.should.eql(2);
+            return db.delete("page", {
+                value: "asdf",
+            })
+        }).then(function(res) {
+            res.affectedRows.should.eql(3);
+        }).then(function(res) {
+
         }).catch(function(err) {
             false.should.be.ok;
             logger.error(err);

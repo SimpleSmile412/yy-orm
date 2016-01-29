@@ -182,3 +182,12 @@ DB.prototype.all = function(table, c, tx) {
         return res.rows;
     });
 }
+
+DB.prototype.delete = function(table, c, tx) {
+    c = condTool.parseToCondObj(c);
+    var fmt = "DELETE FROM ?? WHERE " + c.toSql();
+    var sql = mysql.format(fmt, table);
+    return this.query(sql, tx).then(function(res) {
+        return res.rows;
+    });
+}
