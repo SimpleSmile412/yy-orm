@@ -43,14 +43,6 @@ function parseDef(fields) {
     }
 }
 
-Model.$proto("getCol", function(field) {
-    return this.cols[this.fields[field]._col];
-});
-
-Model.$proto("getField", function(col) {
-    return this.fields[this.cols[col]._field];
-});
-
 Model.$proto("toSql", function() {
     var table = this.table;
     var fields = this.fields;
@@ -87,16 +79,20 @@ Model.$proto("toRow", function(obj) {
     }
     return ret;
 });
-Model.$proto("modelizeCondition", function(c) {
+Model.$proto("schemizeCondition", function(c) {
+    if (c === undefined) {
+        return undefined;
+    }
     var model = this;
+    var field = c.col;
     if (c instanceof condType.OpCond) {
-        c.col = model.getField(c.col)._col;
+        c.col = model.fields[field]._col;
     } else if (c instanceof condType.WrapCondSingle) {
-        c.cond = model.modelizeCondition(c.cond);
+        c.cond = model.schemizeCondition(c.cond);
     } else if (c instanceof condType.WrapCondMulti) {
         var arr = c.cond;
         for (var i = 0; i < arr.length; i++) {
-            c.cond[i] = model.modelizeCondition(arr[i]);
+            c.cond[i] = model.schemizeCondition(arr[i]);
         }
     }
     return c;
@@ -138,7 +134,7 @@ Model.$proto("get", function(c, tx) {
         c = cond.eq(model.key._col, c);
     } else {
         c = condTool.parseToCondObj(c);
-        c = this.modelizeCondition(c);
+        c = this.schemizeCondition(c);
     }
     return this.db.get(this.table, c, tx).then(function(res) {
         return model.toObj(res);
@@ -148,7 +144,7 @@ Model.$proto("get", function(c, tx) {
 Model.$proto("all", function(c, tx) {
     var model = this;
     var c = condTool.parseToCondObj(c);
-    c = this.modelizeCondition(c);
+    c = this.schemizeCondition(c);
     return this.db.all(this.table, c, tx).then(function(res) {
         var ret = [];
         for (var i in res) {

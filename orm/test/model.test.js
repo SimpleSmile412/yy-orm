@@ -7,8 +7,6 @@ var cond = orm.cond;
 
 var logger = console;
 
-
-
 describe('Model Insert And Get', function() {
     var db = orm.create({
         host: 'localhost',
@@ -18,8 +16,8 @@ describe('Model Insert And Get', function() {
     });
 
     var Page = db.define("page", {
-        id: type.id(),
-        value: type.varchar("hi", 32),
+        id: type.id().on("_id"),
+        value: type.varchar("hi", 32).on("_value"),
     })
     it('Insert Get All Get(ID)', function(done) {
         Promise.try(function() {
