@@ -1,6 +1,10 @@
 var common = require("../../yy-common");
 var logger = common.logger;
+var cond = require("./cond");
+var condType = cond.type;
+var condTool = cond.tool;
 var util = require("util");
+var mysql = require("mysql");
 
 // fields: field -> type(_field, _col)
 // cols: col -> type(_field, _col)
@@ -40,7 +44,11 @@ function parseDef(fields) {
 }
 
 Model.$proto("getCol", function(field) {
+    return this.cols[this.fields[field]._col];
+});
 
+Model.$proto("getField", function(col) {
+    return this.fields[this.cols[col]._field];
 });
 
 Model.$proto("toSql", function() {
@@ -97,23 +105,38 @@ Model.$proto("create", function(obj, tx) {
         return ret;
     })
 });
-Model.$proto("find", function(cond, tx) {
-    var model = this;
+Model.$proto("insert", function(obj, tx) {
+    var row = this.toRow(obj);
+    var that = this;
+    return this.db.insert(this.table, row, tx).then(function(res) {
+        var ret = that.toObj(row);
+        if (that.key._auto) {
+            ret[that.key._field] = res.rows.insertId;
+        }
+        return ret;
+    })
+});
 
-    function filter(cond) {
-        if (cond instanceof cond.type.OpCond) {
-            cond.col = model.cols[cond.col]._col;
-        } else if (cond instanceof cond.type.WrapCond) {
-            var conds = cond.conds;
-            for (var i = 0; i < conds.length; i++) {
-                cond.conds[i] = filter(conds[i]);
+Model.$proto("get", function(c, tx) {
+    var model = this;
+    var c = condTool.parseToCondObj(c);
+    // field -> col
+    function filter(c) {
+        if (c instanceof condType.OpCond) {
+            c.col = model.getField(c.col)._col;
+        } else if (c instanceof condType.WrapCondSingle) {
+            c.cond = filter(c.cond);
+        } else if (c instanceof condType.WrapCondMulti) {
+            var arr = c.cond;
+            for (var i = 0; i < arr.length; i++) {
+                c.cond[i] = filter(arr[i]);
             }
         }
-        return cond;
+        return c;
     }
-    cond = filter(cond);
-    return this.db.find(this.table, cond, tx).then(function(res) {
+    c = filter(c);
+    return this.db.get(this.table, c, tx).then(function(res) {
         logger.log(res);
-        return res;
+        return model.toObj(res);
     });
 })

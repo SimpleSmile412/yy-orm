@@ -6,6 +6,8 @@ var Transaction = require("./transaction");
 var Model = require("./model");
 var kit = require("./kit");
 var cond = require("./cond");
+var condType = cond.type;
+var condTool = cond.tool;
 
 var mysql = require("mysql");
 var Promise = require("bluebird");
@@ -95,35 +97,24 @@ DB.$proto("query", function(query, values, tx) {
     })
 });
 
-DB.$proto("select", function(table, schemaCondStr, tx) {
+DB.$proto("select", function(table, c, tx) {
     var that = this;
-    if (schemaCondStr) {
-        schemaCondStr = schemaCondStr.replace(/^where /i, '');
-        var sql = util.format("SELECT * FROM %s WHERE %s", table, schemaCondStr);
+    c = condTool.parseToCondObj(c);
+    if (c) {
+        var condStr = c.toSql();
+        var sql = util.format("SELECT * FROM %s WHERE %s", table, condStr);
     } else {
         var sql = "SELECT * FROM " + table;
     }
     return this.query(sql, tx);
-    // .then(function(res) {
-    //     var model = that.models[table];
-    //     if (!model) {
-    //         return res;
-    //     }
-    //     var rows = res.rows;
-    //     var ret = [];
-    //     for (var i in rows) {
-    //         ret.push(model.toModel(rows[i]));
-    //     }
-    //     return ret;
-    // });
 });
 
 DB.$proto("insert", function(table, obj, tx) {
     var that = this;
     return Promise.try(function() {
-        var fmt = "INSERT INTO %s SET ?"; //VALUES(%s)";
-        var sql = util.format(fmt, table);
-        return that.query(sql, obj, tx);
+        var fmt = "INSERT INTO ?? SET ?"; //VALUES(%s)";
+        var sql = mysql.format(fmt, [table, obj]);
+        return that.query(sql, tx);
     })
 });
 
@@ -153,21 +144,18 @@ DB.$proto("create", function(table, obj, tx) {
     })
 });
 
-DB.$proto("find", function(table, schemaCondValue, tx) {
-    var ret = cond.tool.parseToCondObj(schemaCondValue);
-    if (ret instanceof cond.type.Limit === false) {
-        ret = cond.limit(ret, 1);
+DB.$proto("get", function(table, c, tx) {
+    c = condTool.parseToCondObj(c);
+    if (c instanceof condType.Limit === false) {
+        c = cond.limit(c, 1);
     }
-    var condStr = ret.toString();
-    return this.select(table, condStr, tx).then(function(res) {
+    return this.select(table, c, tx).then(function(res) {
         return res.rows[0];
     });
 });
 
-DB.$proto("all", function(table, schemaCondValue, tx) {
-    var ret = cond.tool.parseToCondObj(schemaCondValue);
-    var condStr = ret.toString();
-    return this.select(table, condStr, tx).then(function(res) {
+DB.$proto("all", function(table, c, tx) {
+    return this.select(table, c, tx).then(function(res) {
         return res.rows;
     });
 });

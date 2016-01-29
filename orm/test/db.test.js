@@ -75,7 +75,7 @@ describe('DB Search', function() {
                 t: 2,
             })
         }).then(function(res) {
-            return db.find("page", cond.eq("value", "asdf"));
+            return db.get("page", cond.eq("value", "asdf"));
         }).then(function(res) {
             res.value.should.eql("asdf");
             res.t.should.eql(1);
@@ -120,7 +120,7 @@ describe('DB Insert', function() {
                 t: 2,
             })
         }).then(function(res) {
-            return db.find("page", cond.eq("value", "asdf"));
+            return db.get("page", cond.eq("value", "asdf"));
         }).then(function(res) {
             res.value.should.eql("asdf");
             res.t.should.eql(1);

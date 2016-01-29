@@ -1,6 +1,7 @@
 var common = require("../../yy-common");
 var logger = common.logger;
 var Promise = require("bluebird");
+var mysql = require("mysql");
 
 function Connection(conn) {
     this.conn = conn;
@@ -8,11 +9,11 @@ function Connection(conn) {
 module.exports = Connection;
 
 Connection.$proto("query", function(query, values) {
-    var info = values ? query + " " + JSON.stringify(values) : query;
-    logger.log(info);
+    var sql = mysql.format(query, values);
+    logger.log(sql);
     var that = this;
     return new Promise(function(resolve, reject) {
-        that.conn.query(query, values, function(err, rows, fields) {
+        that.conn.query(query, function(err, rows, fields) {
             if (err) {
                 reject(err);
             } else {
@@ -66,42 +67,3 @@ Connection.$proto("rollback", function() {
 Connection.$proto("release", function(query) {
     return this.conn.release();
 });
-
-// Connection.$proto("connect", function() {
-//     var that = this;
-//     if (this.conn.state !== "disconnected") {
-//         return Promise.resolve(conn);
-//     }
-//     return new Promise(function(resolve, reject) {
-//         that.conn.connect(function(err) {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(that);
-//             }
-//         });
-//     });
-// })
-
-// Connection.$proto("close", function() {
-//     if (this.conn.state === "disconnected") {
-//         return Promise.resolve();
-//     }
-//     var that = this;
-//     return new Promise(function(resolve, reject) {
-//         that.conn.end(function(err) {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve();
-//             }
-//         });
-//     });
-// })
-
-// Connection.$proto("destroy", function() {
-//     if (this.conn.state !== "disconnected") {
-//         this.conn.destroy();
-//     }
-//     return Promise.resolve();
-// })

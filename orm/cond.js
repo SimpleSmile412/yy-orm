@@ -3,12 +3,14 @@ var logger = common.logger;
 
 var kit = require("./kit");
 var util = require("util");
+var mysql = require("mysql");
 
 var cond = {
     type: {
         Cond: Cond,
         OpCond: OpCond,
-        WrapCond: WrapCond,
+        WrapCondSingle: WrapCondSingle,
+        WrapCondMulti: WrapCondMulti,
         Limit: Limit,
     },
     tool: {
@@ -25,7 +27,10 @@ var cond = {
     lte: lte,
     inn: inn,
     nin: nin,
+    between: between,
     limit: limit,
+    asc: asc,
+    desc: desc,
 }
 
 module.exports = cond;
@@ -39,45 +44,49 @@ function OpCond() {
 }
 util.inherits(OpCond, Cond);
 
-function WrapCond() {
+function WrapCondSingle() {
 
 }
-util.inherits(WrapCond, Cond);
+util.inherits(WrapCondSingle, Cond);
+
+function WrapCondMulti() {
+
+}
+util.inherits(WrapCondMulti, Cond);
 
 function parseToCondObj(c) {
-    if (c instanceof Cond) {
+    if (c === undefined) {
+        return c;
+    } else if (c instanceof Cond) {
         return c;
     } else if (typeof c !== "object") {
-        return cond.eq("$id", kit.normalize(c));
+        return undefined;
     } else {
         for (var i in c) {
             var condArr = [];
             if (c.hasOwnProperty(i)) {
-                condArr.push(cond.eq(i, kit.normalize(c)));
+                condArr.push(cond.eq(i, mysql.escape(c[i])));
             }
         }
+        return cond.and.apply(null, condArr);
     }
 }
 
-function extend(child, parent) {
-    var $ = function() {}
-    $.prototype = parent.prototype;
-    child.prototype = new $();
-    child.prototype.constructor = child;
-}
+util.inherits(And, WrapCondMulti);
+util.inherits(Or, WrapCondMulti);
 
-util.inherits(And, OpCond);
-util.inherits(Or, OpCond);
 util.inherits(Eq, OpCond);
 util.inherits(Ne, OpCond);
 util.inherits(Gt, OpCond);
 util.inherits(Lt, OpCond);
 util.inherits(Gte, OpCond);
 util.inherits(Lte, OpCond);
+util.inherits(In, OpCond);
+util.inherits(NotIn, OpCond);
 
-util.inherits(In, WrapCond);
-util.inherits(NotIn, WrapCond);
-util.inherits(Limit, WrapCond);
+util.inherits(Limit, WrapCondSingle);
+util.inherits(Asc, WrapCondSingle);
+util.inherits(Desc, WrapCondSingle);
 
 function and() {
     return new And(arguments.$array());
@@ -111,37 +120,50 @@ function lte(col, val) {
     return new Lte(col, val);
 }
 
-function inn(col, arr) {
-    return new In(col, arr);
+function inn(col, value) {
+    return new In(col, value);
 }
 
-function nin(col, arr) {
-    return new NotIn(col, arr);
+function nin(col, value) {
+    return new NotIn(col, value);
+}
+
+function between(col, value) {
+    return new Between(col, value);
 }
 
 function limit(c, n, off) {
     return new Limit(c, n, off);
 }
+
+function asc(col) {
+    return new Asc(col);
+}
+
+function desc(col) {
+    return new Desc(col);
+}
 ////
 
-function And(conds) {
-    this.conds = conds;
+function And(c) {
+    this.cond = c;
 };
-And.prototype.toString = function() {
+And.prototype.toSql = function() {
     var buf = [];
-    for (var i in this.conds) {
-        buf.push(this.conds[i].toString());
+    for (var i in this.cond) {
+        buf.push(this.cond[i].toSql());
     }
+    logger.log(this.cond[0].toSql());
     return "(" + buf.join(" AND ") + ")";
 };
 
-function Or(conds) {
-    this.conds = conds;
+function Or(c) {
+    this.cond = c;
 };
-Or.prototype.toString = function() {
+Or.prototype.toSql = function() {
     var buf = [];
-    for (var i in this.conds) {
-        buf.push(this.conds[i].toString());
+    for (var i in this.cond) {
+        buf.push(this.cond[i].toSql());
     }
     return "(" + buf.join(" OR ") + ")";
 };
@@ -150,15 +172,15 @@ function Eq(col, val) {
     this.col = col;
     this.val = val;
 }
-Eq.prototype.toString = function() {
-    return util.format("%s = %s", this.col, kit.normalize(this.val));
+Eq.prototype.toSql = function() {
+    return util.format("%s = %s", this.col, mysql.escape(this.val));
 }
 
 function Ne(col, val) {
     this.col = col;
     this.val = val;
 }
-Ne.prototype.toString = function() {
+Ne.prototype.toSql = function() {
     return util.format("%s <> %s", this.col, kit.normalize(this.val));
 }
 
@@ -166,7 +188,7 @@ function Gt(col, val) {
     this.col = col;
     this.val = val;
 }
-Gt.prototype.toString = function() {
+Gt.prototype.toSql = function() {
     return util.format("%s > %s", this.col, kit.normalize(this.val));
 }
 
@@ -174,7 +196,7 @@ function Lt(col, val) {
     this.col = col;
     this.val = val;
 }
-Lt.prototype.toString = function() {
+Lt.prototype.toSql = function() {
     return util.format("%s < %s", this.col, kit.normalize(this.val));
 }
 
@@ -182,7 +204,7 @@ function Gte(col, val) {
     this.col = col;
     this.val = val;
 }
-Gte.prototype.toString = function() {
+Gte.prototype.toSql = function() {
     return util.format("%s >= %s", this.col, kit.normalize(this.val));
 }
 
@@ -190,43 +212,70 @@ function Lte(col, val) {
     this.col = col;
     this.val = val;
 }
-Lte.prototype.toString = function() {
+Lte.prototype.toSql = function() {
     return util.format("%s <= %s", this.col, kit.normalize(this.val));
 }
 
-function In(col, arr) {
+function In(col, val) {
     this.col = col;
-    this.arr = arr;
+    this.val = val;
 }
-Lte.prototype.toString = function() {
+Lte.prototype.toSql = function() {
     var buf = [];
-    for (var i in this.arr) {
-        buf.push(kit.normalize(this.arr[i]));
+    for (var i in this.val) {
+        buf.push(kit.normalize(this.val[i]));
     }
     return util.format("%s IN (%s)", this.col, buf.join(", "));
 }
 
-function NotIn(col, arr) {
+function NotIn(col, val) {
     this.col = col;
-    this.arr = arr;
+    this.val = val;
 }
-Lte.prototype.toString = function() {
+Lte.prototype.toSql = function() {
     var buf = [];
-    for (var i in this.arr) {
-        buf.push(kit.normalize(this.arr[i]));
+    for (var i in this.val) {
+        buf.push(kit.normalize(this.val[i]));
     }
     return util.format("%s NOT IN (%s)", this.col, buf.join(", "));
 }
 
-function Limit(cond, n, off) {
-    this.cond = cond;
+function Between(col, val) {
+    this.col = col;
+    this.val = val;
+}
+Between.prototype.toSql = function() {
+    return util.format("%s BETWEEN %s AND %s", this.col, mysql.escape(this.value[0]), mysql.escape(this.value[1]));
+}
+
+function Limit(c, n, off) {
+    this.cond = c;
     this.n = n;
     this.off = off;
 }
-Limit.prototype.toString = function() {
+Limit.prototype.toSql = function() {
     if (this.off !== undefined) {
-        return util.format("%s LIMIT %d OFFSET %s", this.cond, this.n, this.off);
+        return util.format("%s LIMIT %d OFFSET %s", this.cond.toSql(), this.n, this.off);
     } else {
-        return util.format("%s LIMIT %d", this.cond, this.n);
+        return util.format("%s LIMIT %d", this.cond.toSql(), this.n);
     }
+}
+
+function Asc(c, col) {
+    this.cond = c;
+    this.col = col;
+}
+Asc.prototype.toSql = function() {
+    var col = Array.isArray(this.col) ? this.col : [this.col];
+    return mysql.format("?? ORDER BY ?? ASC", this.cond.toSql(), col);
+}
+
+function Desc(c, col) {
+    this.cond = c;
+    this.col = col;
+}
+Desc.prototype.toSql = function() {
+    var col = Array.isArray(this.col) ? this.col : [this.col];
+    return mysql.format("?? ORDER BY ?? DESC", this.cond.toSql(), col);
+
 }
