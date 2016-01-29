@@ -87,6 +87,21 @@ Model.$proto("toRow", function(obj) {
     }
     return ret;
 });
+Model.$proto("modelizeCondition", function(c) {
+    var model = this;
+    if (c instanceof condType.OpCond) {
+        c.col = model.getField(c.col)._col;
+    } else if (c instanceof condType.WrapCondSingle) {
+        c.cond = model.modelizeCondition(c.cond);
+    } else if (c instanceof condType.WrapCondMulti) {
+        var arr = c.cond;
+        for (var i = 0; i < arr.length; i++) {
+            c.cond[i] = model.modelizeCondition(arr[i]);
+        }
+    }
+    return c;
+});
+
 Model.$proto("sync", function() {
     return this.db.query(this.toSql());
 });
@@ -120,23 +135,21 @@ Model.$proto("insert", function(obj, tx) {
 Model.$proto("get", function(c, tx) {
     var model = this;
     var c = condTool.parseToCondObj(c);
-    // field -> col
-    function filter(c) {
-        if (c instanceof condType.OpCond) {
-            c.col = model.getField(c.col)._col;
-        } else if (c instanceof condType.WrapCondSingle) {
-            c.cond = filter(c.cond);
-        } else if (c instanceof condType.WrapCondMulti) {
-            var arr = c.cond;
-            for (var i = 0; i < arr.length; i++) {
-                c.cond[i] = filter(arr[i]);
-            }
-        }
-        return c;
-    }
-    c = filter(c);
+    c = this.modelizeCondition(c);
     return this.db.get(this.table, c, tx).then(function(res) {
-        logger.log(res);
         return model.toObj(res);
+    });
+})
+
+Model.$proto("all", function(c, tx) {
+    var model = this;
+    var c = condTool.parseToCondObj(c);
+    c = this.modelizeCondition(c);
+    return this.db.all(this.table, c, tx).then(function(res) {
+        var ret = [];
+        for (var i in res) {
+            ret.push(model.toObj(res[i]))
+        }
+        return ret;
     });
 })

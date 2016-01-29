@@ -65,7 +65,7 @@ function parseToCondObj(c) {
         for (var i in c) {
             var condArr = [];
             if (c.hasOwnProperty(i)) {
-                condArr.push(cond.eq(i, mysql.escape(c[i])));
+                condArr.push(cond.eq(i, c[i]));
             }
         }
         return cond.and.apply(null, condArr);
@@ -153,7 +153,6 @@ And.prototype.toSql = function() {
     for (var i in this.cond) {
         buf.push(this.cond[i].toSql());
     }
-    logger.log(this.cond[0].toSql());
     return "(" + buf.join(" AND ") + ")";
 };
 

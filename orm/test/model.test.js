@@ -35,13 +35,15 @@ describe('Model Insert And Get', function() {
             })
         }).then(function(res) {
             res.id.should.eql(1);
-            return Page.insert({});
+            return Page.insert({
+                value: "h2"
+            });
         }).then(function(res) {
             res.id.should.eql(2);
             return Page.all();
         }).then(function(res) {
             res.length.should.eql(2);
-            res[1].value.should.eql("hi");
+            res[1].value.should.eql("h2");
         }).catch(function(err) {
             logger.log(err);
             logger.log(err.stack);

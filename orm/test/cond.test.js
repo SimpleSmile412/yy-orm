@@ -25,11 +25,8 @@ describe('Cond', function() {
         });
         var belong = c.cond[0] instanceof condType.OpCond;
         belong.should.be.ok;
-        var e = cond.eq("a", "asdf");
-        var s = [e.toSql()].join("and");
-        logger.log(s);
         s = c.toSql();
-        logger.log(s);
+        s.should.eql(`(a = 'asdf')`);
         done();
     });
 });
