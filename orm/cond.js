@@ -19,6 +19,7 @@ var cond = {
         parseToCondObj: parseToCondObj,
     },
 
+    empty: empty,
     and: and,
     or: or,
     eq: eq,
@@ -89,6 +90,8 @@ function parseToCondObj(c) {
     }
 }
 
+util.inherits(Empty, Cond);
+
 util.inherits(And, WrapCondMulti);
 util.inherits(Or, WrapCondMulti);
 
@@ -104,6 +107,10 @@ util.inherits(NotIn, OpCond);
 util.inherits(Limit, WrapCondSingle);
 util.inherits(Asc, WrapCondSingle);
 util.inherits(Desc, WrapCondSingle);
+
+function empty() {
+    return new Empty();
+}
 
 function and() {
     if (arguments.length === 1) {
@@ -153,17 +160,32 @@ function between(col, value) {
 }
 
 function limit(c, n, off) {
+    var flag = c instanceof Cond;
+    off = flag ? off : n;
+    n = flag ? n : c;
+    c = flag ? c : cond.empty();
     return new Limit(c, n, off);
 }
 
 function asc(c, col) {
+    var flag = c instanceof Cond;
+    col = flag ? col : c;
+    c = flag ? c : cond.empty();
     return new Asc(c, col);
 }
 
 function desc(c, col) {
+    var flag = c instanceof Cond;
+    col = flag ? col : c;
+    c = flag ? c : cond.empty();
     return new Desc(c, col);
 }
 ////
+
+function Empty() {}
+Empty.prototype.toSql = function() {
+    return "1 = 1";
+}
 
 function And(c) {
     this.cond = c;
@@ -278,10 +300,11 @@ function Limit(c, n, off) {
     this.off = off;
 }
 Limit.prototype.toSql = function() {
+    var condStr = this.cond.toSql();
     if (this.off !== undefined) {
-        return util.format("%s LIMIT %d OFFSET %s", this.cond.toSql(), this.n, this.off);
+        return util.format("%s LIMIT %d OFFSET %s", condStr, this.n, this.off);
     } else {
-        return util.format("%s LIMIT %d", this.cond.toSql(), this.n);
+        return util.format("%s LIMIT %d", condStr, this.n);
     }
 }
 
@@ -290,8 +313,10 @@ function Asc(c, col) {
     this.col = col;
 }
 Asc.prototype.toSql = function() {
+    var condStr = this.cond.toSql();
     var col = Array.isArray(this.col) ? this.col : [this.col];
-    return mysql.format("?? ORDER BY ?? ASC", [this.cond.toSql(), col]);
+    var fmt = util.format("%s ORDER BY ?? ASC", condStr);
+    return mysql.format(fmt, [col]);
 }
 
 function Desc(c, col) {
@@ -299,7 +324,9 @@ function Desc(c, col) {
     this.col = col;
 }
 Desc.prototype.toSql = function() {
+    var condStr = this.cond.toSql();
     var col = Array.isArray(this.col) ? this.col : [this.col];
-    return mysql.format("?? ORDER BY ?? DESC", [this.cond.toSql(), col]);
+    var fmt = util.format("%s ORDER BY ?? DESC", condStr);
+    return mysql.format(fmt, [col]);
 
 }

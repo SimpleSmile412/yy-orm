@@ -106,14 +106,19 @@ DB.prototype.query = function(query, values, tx) {
     })
 }
 
-DB.prototype.select = function(table, c, tx) {
+DB.prototype.select = function(table, col, c, tx) {
+    c = c instanceof Transaction ? undefined : c;
+    tx = c instanceof Transaction ? c : tx;
+    if (typeof col !== "string") {
+        col = mysql.format("??", col);
+    }
     var that = this;
     c = condTool.parseToCondObj(c);
     if (c) {
         var condStr = c.toSql();
-        var sql = util.format("SELECT * FROM %s WHERE %s", table, condStr);
+        var sql = util.format("SELECT %s FROM %s WHERE %s", col, table, condStr);
     } else {
-        var sql = "SELECT * FROM " + table;
+        var sql = util.format("SELECT %s FROM %s", col, table);
     }
     return this.query(sql, tx);
 }
@@ -121,10 +126,20 @@ DB.prototype.select = function(table, c, tx) {
 DB.prototype.insert = function(table, obj, tx) {
     var that = this;
     return Promise.try(function() {
-        var fmt = "INSERT INTO ?? SET ?"; //VALUES(%s)";
-        var sql = mysql.format(fmt, [table, obj]);
+        if (Array.isArray(obj) && obj.length > 0) {
+            var cols = obj[0].$keys();
+            var values = [];
+            for (var i in obj) {
+                values.push(obj[i].$values());
+            }
+        } else {
+            var cols = obj.$keys();
+            var values = [obj.$values()];
+        }
+        var fmt = "INSERT INTO ??(??) VALUES ?";;
+        var sql = mysql.format(fmt, [table, cols, values]);
         return that.query(sql, tx);
-    })
+    });
 }
 
 DB.prototype.create = function(table, obj, tx) {
@@ -150,7 +165,7 @@ DB.prototype.create = function(table, obj, tx) {
         var fmt = "INSERT INTO %s(%s) VALUES(%s)";
         var sql = util.format(fmt, table, col, value);
         return that.query(sql, tx);
-    })
+    });
 }
 
 DB.prototype.update = function(table, obj, c, tx) {
@@ -172,14 +187,20 @@ DB.prototype.get = function(table, c, tx) {
     if (c instanceof condType.Limit === false) {
         c = cond.limit(c, 1);
     }
-    return this.select(table, c, tx).then(function(res) {
+    return this.select(table, "*", c, tx).then(function(res) {
         return res.rows[0];
     });
 }
 
 DB.prototype.all = function(table, c, tx) {
-    return this.select(table, c, tx).then(function(res) {
+    return this.select(table, "*", c, tx).then(function(res) {
         return res.rows;
+    });
+}
+
+DB.prototype.count = function(table, c, tx) {
+    return this.select(table, "COUNT(1) AS COUNT", c, tx).then(function(res) {
+        return res.rows[0]["COUNT"];
     });
 }
 

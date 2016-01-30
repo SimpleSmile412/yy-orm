@@ -164,3 +164,40 @@ describe('DB Insert Get All Update', function() {
         });
     });
 });
+
+describe('DB', function() {
+    var db = orm.create({
+        host: 'localhost',
+        user: 'root',
+        password: 'root',
+        database: 'test'
+    });
+
+    var Page = db.define("Page", {
+        id: type.id(),
+        v: type.varchar("hi", 32),
+        i: type.integer(10),
+    })
+    it('Count', function(done) {
+        Promise.try(function() {
+            return db.rebuild();
+        }).then(function(res) {
+            var pages = [];
+            for (var i = 0; i < 2; i++) {
+                pages.push({
+                    i: i,
+                })
+            }
+            return db.insert("Page", pages);
+        }).then(function(res) {
+            return db.count("Page");
+        }).then(function(res) {
+            res.should.eql(2);
+        }).then(function(res) {
+
+        }).done(function() {
+            db.close().done();
+            done();
+        })
+    })
+});
