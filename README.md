@@ -5,8 +5,8 @@ insert
 
 update
 
-get/select
+one/select
 
 delete
 
-batch
+count
