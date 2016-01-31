@@ -14,6 +14,9 @@ function ModelObject(model) {
 }
 
 ModelObject.fromRow = function(model, row) {
+    if (!row) {
+        return undefined;
+    }
     var fields = model.fields;
     var ret = {};
     for (var field in fields) {
@@ -41,6 +44,6 @@ ModelObject.prototype.schemaKey = function() {
 ModelObject.prototype.modelKey = function() {
     return this.$model.key._field;
 }
-ModelObject.prototype.key = function() {
+ModelObject.prototype.keyVal = function() {
     return this[this.$model.key._field];
 }

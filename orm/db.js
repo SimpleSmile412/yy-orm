@@ -213,35 +213,16 @@ DB.prototype.update = function(table, obj, c, tx) {
         return res.rows;
     });
 }
-
-// DB.prototype.get = function(table, c, tx) {
-//     c = condTool.parseToCondObj(c);
-//     if (c instanceof condType.Limit === false) {
-//         c = cond.limit(c, 1);
-//     }
-//     return this.select(table, "*", c, tx).then(function(res) {
-//         return res[0];
-//     });
-// };
-
-// DB.prototype.all = function(table, c, tx) {
-//     return this.select(table, "*", c, tx).then(function(res) {
-//         return res.rows;
-//     });
-// }
-
-
-DB.prototype.count = function(table, c, tx) {
-    return this.select(table, "COUNT(1) AS COUNT", c, tx).then(function(res) {
-        return res.rows[0]["COUNT"];
-    });
-}
-
 DB.prototype.delete = function(table, c, tx) {
     c = condTool.parseToCondObj(c);
     var fmt = "DELETE FROM ?? WHERE " + c.toSql();
     var sql = mysql.format(fmt, table);
     return this.query(sql, tx).then(function(res) {
         return res.rows;
+    });
+}
+DB.prototype.count = function(table, c, tx) {
+    return this.select(table, "COUNT(1) AS COUNT", c, tx).then(function(res) {
+        return res.rows[0]["COUNT"];
     });
 }

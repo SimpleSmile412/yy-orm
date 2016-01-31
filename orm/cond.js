@@ -219,7 +219,7 @@ function Eq(col, val) {
     this.val = val;
 }
 Eq.prototype.toSql = function() {
-    return util.format("%s = %s", this.col, mysql.escape(this.val));
+    return mysql.format("?? = ?", [this.col, this.val]);
 }
 
 function Ne(col, val) {

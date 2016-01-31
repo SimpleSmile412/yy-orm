@@ -118,14 +118,27 @@ Model.prototype.insert = function(obj, tx) {
     })
 }
 Model.prototype.update = function(obj, tx) {
-    obj = obj.toRow();
-    var c = {
-        obj[obj.schemaKey()]: obj.key(),
-    }
+    row = obj.toRow();
+    var c = {};
+    c[obj.schemaKey()] = obj.keyVal();
+    delete row[obj.schemaKey()];
     var that = this;
-    return this.db.update(this.table, obj, c, tx).then(function(res) {
+    return this.db.update(this.table, row, c, tx).then(function(res) {
         return obj;
     })
+}
+Model.prototype.select = function(c, tx) {
+    var model = this;
+    var c = condTool.parseToCondObj(c);
+    c = this.schemizeCondition(c);
+    return this.db.select(this.table, "*", c, tx).then(function(res) {
+        var ret = [];
+        for (var i in res) {
+            // ret.push(model.toObj(res[i]))
+            ret.push(ModelObject.fromRow(model, res[i]))
+        }
+        return ret;
+    });
 }
 Model.prototype.one = function(c, tx) {
     var model = this;
@@ -140,16 +153,10 @@ Model.prototype.one = function(c, tx) {
         return ModelObject.fromRow(model, res);
     });
 }
-Model.prototype.select = function(c, tx) {
-    var model = this;
-    var c = condTool.parseToCondObj(c);
-    c = this.schemizeCondition(c);
-    return this.db.select(this.table, "*", c, tx).then(function(res) {
-        var ret = [];
-        for (var i in res) {
-            // ret.push(model.toObj(res[i]))
-            ret.push(ModelObject.fromRow(model, res[i]))
-        }
-        return ret;
+Model.prototype.delete = function(obj, tx) {
+    var c = {};
+    c[obj.schemaKey()] = obj.keyVal();
+    return this.db.delete(this.table, c, tx).then(function(res) {
+        return res;
     });
 }
