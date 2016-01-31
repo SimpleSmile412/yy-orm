@@ -108,14 +108,11 @@ DB.prototype.query = function(query, values, tx) {
 }
 
 //string, string/[], cond/object, transaction
-DB.prototype.select = function(table, a, b, tx) {
-    if (arguments.length === 4) {
-        var col = a;
-        var c = b;
-    } else {
-        var picker = new ArgPicker(arguments);
-        var col = picker.first(["string", "array"], 1);
-        var c = picker.first([cond.Cond, "object"], 1);
+DB.prototype.select = function(table, col, c, tx) {
+    if (arguments.length !== 4) {
+        var picker = new ArgPicker(arguments.$clone());
+        col = picker.first(["string", "array"], 1);
+        c = picker.first([cond.Cond, "object"], 1);
         tx = picker.rfirst(Transaction);
     }
     if (col === undefined) {
@@ -217,21 +214,22 @@ DB.prototype.update = function(table, obj, c, tx) {
     });
 }
 
-DB.prototype.get = function(table, c, tx) {
-    c = condTool.parseToCondObj(c);
-    if (c instanceof condType.Limit === false) {
-        c = cond.limit(c, 1);
-    }
-    return this.select(table, "*", c, tx).then(function(res) {
-        return res.rows[0];
-    });
-}
+// DB.prototype.get = function(table, c, tx) {
+//     c = condTool.parseToCondObj(c);
+//     if (c instanceof condType.Limit === false) {
+//         c = cond.limit(c, 1);
+//     }
+//     return this.select(table, "*", c, tx).then(function(res) {
+//         return res[0];
+//     });
+// };
 
-DB.prototype.all = function(table, c, tx) {
-    return this.select(table, "*", c, tx).then(function(res) {
-        return res.rows;
-    });
-}
+// DB.prototype.all = function(table, c, tx) {
+//     return this.select(table, "*", c, tx).then(function(res) {
+//         return res.rows;
+//     });
+// }
+
 
 DB.prototype.count = function(table, c, tx) {
     return this.select(table, "COUNT(1) AS COUNT", c, tx).then(function(res) {

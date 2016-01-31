@@ -2,12 +2,13 @@ var Promise = require("bluebird");
 var should = require("should");
 
 var orm = require("../../orm");
+var ModelObject = require("../model_object");
 var type = orm.type;
 var cond = orm.cond;
 
 var logger = console;
 
-describe('Model Insert And Select', function() {
+describe('ModelObject', function() {
     var db = orm.create({
         host: 'localhost',
         user: 'root',
@@ -19,38 +20,28 @@ describe('Model Insert And Select', function() {
         id: type.id().on("_id"),
         value: type.varchar("hi", 32).on("_value"),
     })
-    it('Insert One(ID) Select', function(done) {
+    it('Trans To/From Row', function(done) {
         Promise.try(function() {
             return db.rebuild();
         }).then(function(res) {
             return Page.insert({
                 value: "hello",
-            })
-        }).then(function(res) {
-            res.id.should.eql(1);
-            return Page.one({
-                value: "hello",
-            })
-        }).then(function(res) {
-            res.id.should.eql(1);
-            return Page.insert({
-                value: "h2"
             });
         }).then(function(res) {
-            res.id.should.eql(2);
-            return Page.select();
-        }).then(function(res) {
-            res.length.should.eql(2);
-            res[1].value.should.eql("h2");
-            return Page.one(1);
-        }).then(function(res) {
-            res.value.should.eql("hello");
+            var page = res;
+            var row = {
+                _id: page.id,
+                _value: page.value,
+            }
+            var p2 = page.toRow();
+            p2.should.eql({
+                _id: 1,
+                _value: 'hello'
+            });
         }).then(function(res) {
 
-        }).catch(function(err) {
-            logger.log(err);
-            logger.log(err.stack);
-            false.should.be.ok;
+        }).then(function(res) {
+
         }).done(function() {
             db.close();
             done();

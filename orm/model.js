@@ -1,6 +1,7 @@
 var common = require("../../yy-common");
 var logger = common.logger;
 var cond = require("./cond");
+var ModelObject = require("./model_object");
 var condType = cond.type;
 var condTool = cond.tool;
 var util = require("util");
@@ -44,7 +45,7 @@ function parseDef(fields, ext) {
     }
 }
 
-Model.$proto("toSql", function() {
+Model.prototype.toSql = function() {
     var table = this.table;
     var fields = this.fields;
     var unique = this.unique;
@@ -59,8 +60,8 @@ Model.$proto("toSql", function() {
     var tableStr = buf.join(", ");
     var sql = util.format(fmt, table, tableStr);
     return sql;
-});
-Model.$proto("toObj", function(row) {
+}
+Model.prototype.toObj = function(row) {
     var fields = this.fields;
     var ret = {};
     for (var field in this.fields) {
@@ -69,8 +70,8 @@ Model.$proto("toObj", function(row) {
         }
     }
     return ret;
-});
-Model.$proto("toRow", function(obj) {
+}
+Model.prototype.toRow = function(obj) {
     var fields = this.fields;
     var ret = {};
     for (var field in this.fields) {
@@ -79,8 +80,8 @@ Model.$proto("toRow", function(obj) {
         }
     }
     return ret;
-});
-Model.$proto("schemizeCondition", function(c) {
+}
+Model.prototype.schemizeCondition = function(c) {
     if (c === undefined) {
         return undefined;
     }
@@ -97,27 +98,36 @@ Model.$proto("schemizeCondition", function(c) {
         }
     }
     return c;
-});
-
-Model.$proto("sync", function() {
+}
+Model.prototype.sync = function() {
     return this.db.query(this.toSql());
-});
-Model.$proto("drop", function() {
+}
+Model.prototype.drop = function() {
     var sql = "DROP TABLE IF EXISTS " + this.table;
     return this.db.query(sql);
-});
-Model.$proto("insert", function(obj, tx) {
+}
+Model.prototype.insert = function(obj, tx) {
     var row = this.toRow(obj);
     var that = this;
     return this.db.insert(this.table, row, tx).then(function(res) {
         if (that.key._auto) {
             obj[that.key._field] = res.insertId;
         }
+        return new ModelObject(that, obj);
+        // return obj;
+    })
+}
+Model.prototype.update = function(obj, tx) {
+    obj = obj.toRow();
+    var c = {
+        obj[obj.schemaKey()]: obj.key(),
+    }
+    var that = this;
+    return this.db.update(this.table, obj, c, tx).then(function(res) {
         return obj;
     })
-});
-
-Model.$proto("one", function(c, tx) {
+}
+Model.prototype.one = function(c, tx) {
     var model = this;
     if (typeof c !== "object") {
         c = cond.eq(model.key._col, c);
@@ -126,19 +136,20 @@ Model.$proto("one", function(c, tx) {
         c = this.schemizeCondition(c);
     }
     return this.db.one(this.table, "*", c, tx).then(function(res) {
-        return model.toObj(res);
+        // return model.toObj(res);
+        return ModelObject.fromRow(model, res);
     });
-})
-
-Model.$proto("select", function(c, tx) {
+}
+Model.prototype.select = function(c, tx) {
     var model = this;
     var c = condTool.parseToCondObj(c);
     c = this.schemizeCondition(c);
     return this.db.select(this.table, "*", c, tx).then(function(res) {
         var ret = [];
         for (var i in res) {
-            ret.push(model.toObj(res[i]))
+            // ret.push(model.toObj(res[i]))
+            ret.push(ModelObject.fromRow(model, res[i]))
         }
         return ret;
     });
-})
+}
