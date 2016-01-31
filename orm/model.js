@@ -106,29 +106,18 @@ Model.$proto("drop", function() {
     var sql = "DROP TABLE IF EXISTS " + this.table;
     return this.db.query(sql);
 });
-Model.$proto("create", function(obj, tx) {
-    var row = this.toRow(obj);
-    var that = this;
-    return this.db.create(this.table, row, tx).then(function(res) {
-        var ret = that.toObj(row);
-        if (that.key._auto) {
-            ret[that.key._field] = res.rows.insertId;
-        }
-        return ret;
-    })
-});
 Model.$proto("insert", function(obj, tx) {
     var row = this.toRow(obj);
     var that = this;
     return this.db.insert(this.table, row, tx).then(function(res) {
         if (that.key._auto) {
-            obj[that.key._field] = res.rows.insertId;
+            obj[that.key._field] = res.insertId;
         }
         return obj;
     })
 });
 
-Model.$proto("get", function(c, tx) {
+Model.$proto("one", function(c, tx) {
     var model = this;
     if (typeof c !== "object") {
         c = cond.eq(model.key._col, c);
@@ -136,16 +125,16 @@ Model.$proto("get", function(c, tx) {
         c = condTool.parseToCondObj(c);
         c = this.schemizeCondition(c);
     }
-    return this.db.get(this.table, c, tx).then(function(res) {
+    return this.db.one(this.table, "*", c, tx).then(function(res) {
         return model.toObj(res);
     });
 })
 
-Model.$proto("all", function(c, tx) {
+Model.$proto("select", function(c, tx) {
     var model = this;
     var c = condTool.parseToCondObj(c);
     c = this.schemizeCondition(c);
-    return this.db.all(this.table, c, tx).then(function(res) {
+    return this.db.select(this.table, "*", c, tx).then(function(res) {
         var ret = [];
         for (var i in res) {
             ret.push(model.toObj(res[i]))

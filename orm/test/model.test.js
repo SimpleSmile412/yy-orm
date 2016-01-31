@@ -7,7 +7,7 @@ var cond = orm.cond;
 
 var logger = console;
 
-describe('Model Insert And Get', function() {
+describe('Model Insert And Select', function() {
     var db = orm.create({
         host: 'localhost',
         user: 'root',
@@ -19,7 +19,7 @@ describe('Model Insert And Get', function() {
         id: type.id().on("_id"),
         value: type.varchar("hi", 32).on("_value"),
     })
-    it('Insert Get All Get(ID)', function(done) {
+    it('Insert One(ID) Select)', function(done) {
         Promise.try(function() {
             return db.rebuild();
         }).then(function(res) {
@@ -28,7 +28,7 @@ describe('Model Insert And Get', function() {
             })
         }).then(function(res) {
             res.id.should.eql(1);
-            return Page.get({
+            return Page.one({
                 value: "hello",
             })
         }).then(function(res) {
@@ -38,11 +38,11 @@ describe('Model Insert And Get', function() {
             });
         }).then(function(res) {
             res.id.should.eql(2);
-            return Page.all();
+            return Page.select();
         }).then(function(res) {
             res.length.should.eql(2);
             res[1].value.should.eql("h2");
-            return Page.get(1);
+            return Page.one(1);
         }).then(function(res) {
             res.value.should.eql("hello");
         }).then(function(res) {

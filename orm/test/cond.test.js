@@ -39,7 +39,7 @@ describe('Cond', function() {
     });
     it('Compose', function(done) {
         var c = cond.lt("a", "1").and(cond.eq("b", 2)).asc(["a", "b"]);
-        c.toSql().should.eql("`a < '1' AND b = 2` ORDER BY `a`, `b` ASC");
+        c.toSql().should.eql("a < '1' AND b = 2 ORDER BY `a`, `b` ASC");
         done();
     });
 });

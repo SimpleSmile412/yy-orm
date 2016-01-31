@@ -17,7 +17,7 @@ describe('DB Transaction', function() {
 
     var Page = db.define("page", {
         id: type.id(),
-        value: type.varchar("hi", 32),
+        v: type.varchar("hi", 32),
         t: type.datetime().unique(),
     })
     it('Transaction Rollback', function(done) {
@@ -28,10 +28,10 @@ describe('DB Transaction', function() {
         }).then(function(res) {
             return db.beginTransaction();
         }).then(function(tx) {
-            return tx.create("page", {
+            return tx.insert("page", {
                 t: new Date(),
             }).then(function(res) {
-                return tx.create("page", {
+                return tx.insert("page", {
                     t: new Date(),
                 });
             }).then(function(res) {
@@ -47,6 +47,7 @@ describe('DB Transaction', function() {
     });
 });
 
+
 describe('DB Search', function() {
     var db = orm.create({
         host: 'localhost',
@@ -56,46 +57,44 @@ describe('DB Search', function() {
     });
     var Page = db.define("page", {
         id: type.id(),
-        value: type.varchar("hi", 32),
+        v: type.varchar("hi", 32),
         t: type.integer(),
     })
     it('Search', function(done) {
         Promise.try(function() {
             return db.rebuild();
         }).then(function(res) {
-            return Page.create({
-                value: "asdf",
+            return Page.insert({
+                v: "asdf",
                 t: 1,
             })
         }).then(function(res) {
-            return Page.create({
-                value: "asdf",
+            return Page.insert({
+                v: "asdf",
                 t: 2,
             })
         }).then(function(res) {
-            return Page.create({
-                value: "asdf",
+            return Page.insert({
+                v: "asdf",
                 t: 2,
             })
         }).then(function(res) {
-            return db.get("page", cond.eq("value", "asdf"));
+            return db.one("page", cond.eq("v", "asdf"));
         }).then(function(res) {
-            res.value.should.eql("asdf");
+            res.v.should.eql("asdf");
             res.t.should.eql(1);
         }).then(function() {
-            return db.all("page", {
-                value: "asdf",
+            return db.select("page", {
+                v: "asdf",
                 t: 2,
             });
         }).then(function(res) {
             res.length.should.eql(2);
             return db.delete("page", {
-                value: "asdf",
+                v: "asdf",
             })
         }).then(function(res) {
             res.affectedRows.should.eql(3);
-        }).then(function(res) {
-
         }).catch(function(err) {
             false.should.be.ok;
             logger.error(err);
@@ -107,7 +106,7 @@ describe('DB Search', function() {
     });
 });
 
-describe('DB Insert Get All Update', function() {
+describe('DB Select', function() {
     var db = orm.create({
         host: 'localhost',
         user: 'root',
@@ -116,88 +115,143 @@ describe('DB Insert Get All Update', function() {
     });
     var Page = db.define("page", {
         id: type.id(),
-        value: type.varchar("hi", 32),
+        v: type.varchar("hi", 32),
         t: type.integer(),
     })
     it('Search', function(done) {
         Promise.try(function() {
             return db.rebuild();
         }).then(function(res) {
-            return db.insert("page", {
-                value: "asdf",
+            var pages = [];
+            for (var i = 0; i < 3; i++) {
+                pages.push({
+                    t: i,
+                })
+            }
+            return db.insert("page", pages);
+        }).then(function(res) {
+            res.affectedRows.should.eql(3);
+            return db.select("page");
+        }).then(function(res) {
+            res.length.should.eql(3);
+            return db.select("page", {
+                t: 2
+            });
+        }).then(function(res) {
+            res[0].id.should.eql(3);
+            return db.select("page", "id", {
                 t: 1,
-            })
-        }).then(function(res) {
-            return db.insert("page", {
-                value: "asdf",
-                t: 2,
-            })
-        }).then(function(res) {
-            return db.get("page", cond.eq("value", "asdf"));
-        }).then(function(res) {
-            res.value.should.eql("asdf");
-            res.t.should.eql(1);
-        }).then(function() {
-            return db.all("page", cond.eq("value", "asdf"));
-        }).then(function(res) {
-            res.length.should.eql(2);
-            return db.update("page", {
-                value: "ok",
-            }, {
-                t: 2
             });
         }).then(function(res) {
-            res.changedRows.should.eql(1);
-            res.affectedRows.should.eql(1);
-            return db.get("page", {
-                t: 2
-            });
+            logger.log(res);
+            res[0].id.should.eql(2);
+            return db.beginTransaction().then(function(tx) {
+                return db.select("page", cond.gt("id", 1), tx);
+            }).then(function(res) {
+                res.length.should.eql(2);
+                logger.log(res);
+            }).then(function(res) {
+                return tx.commit();
+            })
         }).then(function(res) {
-            res.value.should.eql("ok");
-        }).catch(function(err) {
-            false.should.be.ok;
-            logger.error(err);
-            logger.error(err.stack);
+            return db.close();
         }).done(function() {
-            db.close();
             done();
         });
     });
 });
 
-describe('DB', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
+// describe('DB Insert Get All Update', function() {
+//     var db = orm.create({
+//         host: 'localhost',
+//         user: 'root',
+//         password: 'root',
+//         database: 'test'
+//     });
+//     var Page = db.define("page", {
+//         id: type.id(),
+//         v: type.varchar("hi", 32),
+//         t: type.integer(),
+//     })
+//     it('Search', function(done) {
+//         Promise.try(function() {
+//             return db.rebuild();
+//         }).then(function(res) {
+//             return db.insert("page", {
+//                 v: "asdf",
+//                 t: 1,
+//             })
+//         }).then(function(res) {
+//             return db.insert("page", {
+//                 v: "asdf",
+//                 t: 2,
+//             })
+//         }).then(function(res) {
+//             return db.one("page", cond.eq("v", "asdf"));
+//         }).then(function(res) {
+//             res.v.should.eql("asdf");
+//             res.t.should.eql(1);
+//         }).then(function() {
+//             return db.select("page", cond.eq("v", "asdf"));
+//         }).then(function(res) {
+//             res.length.should.eql(2);
+//             return db.update("page", {
+//                 v: "ok",
+//             }, {
+//                 t: 2
+//             });
+//         }).then(function(res) {
+//             res.changedRows.should.eql(1);
+//             res.affectedRows.should.eql(1);
+//             return db.one("page", {
+//                 t: 2
+//             });
+//         }).then(function(res) {
+//             res.v.should.eql("ok");
+//         }).catch(function(err) {
+//             false.should.be.ok;
+//             logger.error(err);
+//             logger.error(err.stack);
+//         }).done(function() {
+//             db.close();
+//             done();
+//         });
+//     });
+// });
 
-    var Page = db.define("Page", {
-        id: type.id(),
-        v: type.varchar("hi", 32),
-        i: type.integer(10),
-    })
-    it('Count', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            var pages = [];
-            for (var i = 0; i < 2; i++) {
-                pages.push({
-                    i: i,
-                })
-            }
-            return db.insert("Page", pages);
-        }).then(function(res) {
-            return db.count("Page");
-        }).then(function(res) {
-            res.should.eql(2);
-        }).then(function(res) {
+// describe('DB', function() {
+//     var db = orm.create({
+//         host: 'localhost',
+//         user: 'root',
+//         password: 'root',
+//         database: 'test'
+//     });
 
-        }).done(function() {
-            db.close().done();
-            done();
-        })
-    })
-});
+//     var Page = db.define("Page", {
+//         id: type.id(),
+//         v: type.varchar("hi", 32),
+//         i: type.integer(10),
+//     })
+//     it('Count', function(done) {
+//         Promise.try(function() {
+//             return db.rebuild();
+//         }).then(function(res) {
+//             var pages = [];
+//             for (var i = 0; i < 2; i++) {
+//                 pages.push({
+//                     i: i,
+//                 })
+//             }
+//             return db.insert("Page", pages);
+//         }).then(function(res) {
+//             return db.count("Page");
+//         }).then(function(res) {
+//             res.should.eql(2);
+//         }).then(function(res) {
+
+//         }).done(function() {
+//             db.close().done();
+//             done();
+//         })
+//     })
+// });

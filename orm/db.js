@@ -1,5 +1,6 @@
 var common = require("../../yy-common");
 var logger = common.logger;
+var ArgPicker = common.ArgPicker;
 
 var Connection = require("./connection");
 var Transaction = require("./transaction");
@@ -106,21 +107,53 @@ DB.prototype.query = function(query, values, tx) {
     })
 }
 
-DB.prototype.select = function(table, col, c, tx) {
-    c = c instanceof Transaction ? undefined : c;
-    tx = c instanceof Transaction ? c : tx;
-    if (typeof col !== "string") {
+//string, string/[], cond/object, transaction
+DB.prototype.select = function(table, a, b, tx) {
+    if (arguments.length === 4) {
+        var col = a;
+        var c = b;
+    } else {
+        var picker = new ArgPicker(arguments);
+        var col = picker.first(["string", "array"], 1);
+        var c = picker.first([cond.Cond, "object"], 1);
+        tx = picker.rfirst(Transaction);
+    }
+    if (col === undefined) {
+        col = "*";
+    } else if (typeof col !== "string") {
         col = mysql.format("??", col);
     }
-    var that = this;
     c = condTool.parseToCondObj(c);
+    var that = this;
     if (c) {
         var condStr = c.toSql();
         var sql = util.format("SELECT %s FROM %s WHERE %s", col, table, condStr);
     } else {
         var sql = util.format("SELECT %s FROM %s", col, table);
     }
-    return this.query(sql, tx);
+    return this.query(sql, tx).then(function(res) {
+        return res.rows;
+    });
+}
+
+//string, string/[], cond/object, transaction
+DB.prototype.one = function(table, a, b, tx) {
+    if (arguments.length === 4) {
+        var col = a;
+        var c = b;
+    } else {
+        var picker = new ArgPicker(arguments);
+        var col = picker.first(["string", "array"], 1);
+        var c = picker.first([cond.Cond, "object"], 1);
+        tx = picker.rfirst(Transaction);
+    }
+    c = condTool.parseToCondObj(c);
+    if (c instanceof condType.Limit === false) {
+        c = cond.limit(c, 1);
+    }
+    return this.select(table, col, c, tx).then(function(res) {
+        return res[0];
+    })
 }
 
 DB.prototype.insert = function(table, obj, tx) {
@@ -139,6 +172,8 @@ DB.prototype.insert = function(table, obj, tx) {
         var fmt = "INSERT INTO ??(??) VALUES ?";;
         var sql = mysql.format(fmt, [table, cols, values]);
         return that.query(sql, tx);
+    }).then(function(res) {
+        return res.rows;
     });
 }
 
