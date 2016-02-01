@@ -154,6 +154,12 @@ describe('DB Select', function() {
                 return tx.commit();
             })
         }).then(function(res) {
+            return db.select("page", cond.desc("t").limit(10));
+        }).then(function(res) {
+            logger.log(res);
+        }).then(function(res) {
+
+        }).then(function(res) {
             return db.close();
         }).done(function() {
             done();

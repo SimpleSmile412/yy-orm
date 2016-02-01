@@ -110,10 +110,12 @@ DB.prototype.query = function(query, values, tx) {
 //string, string/[], cond/object, transaction
 DB.prototype.select = function(table, col, c, tx) {
     if (arguments.length !== 4) {
-        var picker = new ArgPicker(arguments.$clone());
-        col = picker.first(["string", "array"], 1);
-        c = picker.first([cond.Cond, "object"], 1);
+        var args = arguments.$clone();
+        args.length = arguments.length;
+        var picker = new ArgPicker(args);
         tx = picker.rfirst(Transaction);
+        c = picker.first([condType.Cond, "object"], 1);
+        col = picker.first(["string", "array"], 1);
     }
     if (col === undefined) {
         col = "*";
@@ -134,15 +136,14 @@ DB.prototype.select = function(table, col, c, tx) {
 }
 
 //string, string/[], cond/object, transaction
-DB.prototype.one = function(table, a, b, tx) {
-    if (arguments.length === 4) {
-        var col = a;
-        var c = b;
-    } else {
-        var picker = new ArgPicker(arguments);
-        var col = picker.first(["string", "array"], 1);
-        var c = picker.first([cond.Cond, "object"], 1);
+DB.prototype.one = function(table, col, c, tx) {
+    if (arguments.length !== 4) {
+        var args = arguments.$clone();
+        args.length = arguments.length;
+        var picker = new ArgPicker(args);
         tx = picker.rfirst(Transaction);
+        c = picker.first([condType.Cond, "object"], 1);
+        col = picker.first(["string", "array"], 1);
     }
     c = condTool.parseToCondObj(c);
     if (c instanceof condType.Limit === false) {
