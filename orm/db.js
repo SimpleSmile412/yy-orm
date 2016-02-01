@@ -110,8 +110,7 @@ DB.prototype.query = function(query, values, tx) {
 //string, string/[], cond/object, transaction
 DB.prototype.select = function(table, col, c, tx) {
     if (arguments.length !== 4) {
-        var args = arguments.$clone();
-        args.length = arguments.length;
+        var args = arguments.$array();
         var picker = new ArgPicker(args);
         tx = picker.rfirst(Transaction);
         c = picker.first([condType.Cond, "object"], 1);
@@ -138,7 +137,7 @@ DB.prototype.select = function(table, col, c, tx) {
 //string, string/[], cond/object, transaction
 DB.prototype.one = function(table, col, c, tx) {
     if (arguments.length !== 4) {
-        var args = arguments.$clone();
+        var args = arguments.$array();
         args.length = arguments.length;
         var picker = new ArgPicker(args);
         tx = picker.rfirst(Transaction);
