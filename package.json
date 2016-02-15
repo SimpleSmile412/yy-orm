@@ -1,7 +1,7 @@
 {
   "name": "yy-orm",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "node orm",
   "main": "index.js",
   "dependencies": {
     "bluebird": "^3.1.5",
@@ -13,5 +13,18 @@
     "test": "mocha lib/test"
   },
   "author": "yuemenglong",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuemenglong/yy-orm.git"
+  },
+  "keywords": [
+    "orm",
+    "node",
+    "js"
+  ],
+  "bugs": {
+    "url": "https://github.com/yuemenglong/yy-orm/issues"
+  },
+  "homepage": "https://github.com/yuemenglong/yy-orm#readme"
 }
