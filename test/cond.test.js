@@ -69,7 +69,7 @@ describe('Cond', function() {
 
         var c3 = cond.desc("c").limit(20);
         console.log(c3.toSql());
-        c3.toSql().should.eql("1 = 1 ORDER BY `c` DESC LIMIT 20");
+        c3.toSql().should.eql("1 = 1 ORDER BY `c` DESC LIMIT 20 OFFSET 0");
 
         done();
     });
