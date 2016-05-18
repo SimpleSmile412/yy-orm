@@ -1,5 +1,3 @@
-var common = require("../yy-common");
-
 var type = require("./lib/type");
 var cond = require("./lib/cond");
 var DB = require("./lib/db");
@@ -12,7 +10,6 @@ function ORM() {
     this.type = type;
     this.cond = cond;
     this.format = mysql.format;
-    this.logger = common.logger;
 }
 
 var orm = new ORM();
