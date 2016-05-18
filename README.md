@@ -21,4 +21,15 @@ gte
 lte   
 in  
 nin   
+between   
+
+##Combined Cond
+and   
+or    
+
+##Decorate Cond
+asc   
+desc    
+limit   
+
 
