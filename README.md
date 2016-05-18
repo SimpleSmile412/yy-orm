@@ -1,18 +1,20 @@
 # yy-orm
-node orm
+# Getting Started
+var orm = require("yy-orm");
 
-insert
+## Create Database Object
+var opt = { 
+    host: 'localhost',  
+    user: 'root', 
+    password: 'root', 
+    database: 'test'  
+};  
+var db = orm.create(opt);
 
-update
+## Define Schema
 
-one/select
-
-delete
-
-count
-
-#Cond
-##Simple Cond
+# Cond
+## Simple Cond
 eq  
 ne  
 gt  
