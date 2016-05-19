@@ -2,7 +2,7 @@ var Promise = require("bluebird");
 var should = require("should");
 
 var orm = require("..");
-var ModelObject = require("../model_object");
+var ModelObject = require("../model-object");
 var type = orm.type;
 var cond = orm.cond;
 

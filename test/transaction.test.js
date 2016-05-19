@@ -1,11 +1,9 @@
 var Promise = require("bluebird");
 var should = require("should");
 
-var orm = require("../..");
+var orm = require("..");
 var type = orm.type;
 var cond = orm.cond;
-
-var logger = orm.logger;
 
 describe('Transaction', function() {
     var db = orm.create({
@@ -17,7 +15,7 @@ describe('Transaction', function() {
 
     var Page = db.define("page", {
         id: type.id(),
-        v: type.integer(),
+        value: type.integer(),
     })
     var conn = null;
     var conn2 = null;
@@ -30,7 +28,7 @@ describe('Transaction', function() {
             conn = res;
             return conn.query("begin");
         }).then(function(res) {
-            return conn.query("insert into page(v) values(100)");
+            return conn.query("insert into page(value) values(100)");
         }).then(function(res) {
             return db.getConnection();
         }).then(function(res) {
@@ -62,7 +60,7 @@ describe('Transaction', function() {
 
     var Page = db.define("page", {
         id: type.id(),
-        v: type.integer(),
+        value: type.integer(),
     })
     var conn = null;
     var conn2 = null;
@@ -75,7 +73,7 @@ describe('Transaction', function() {
             conn = res;
             return conn.beginTransaction();
         }).then(function(res) {
-            return conn.query("insert into page(v) values(100)");
+            return conn.query("insert into page(value) values(100)");
         }).then(function(res) {
             return db.getConnection();
         }).then(function(res) {
@@ -107,7 +105,7 @@ describe('Transaction', function() {
 
     var Page = db.define("page", {
         id: type.id(),
-        v: type.integer(),
+        value: type.integer(),
     })
     var tx = null;
     var conn2 = null;
@@ -118,7 +116,7 @@ describe('Transaction', function() {
             return db.beginTransaction();
         }).then(function(res) {
             tx = res;
-            return tx.query("insert into page(v) values(100)");
+            return tx.query("insert into page(value) values(100)");
         }).then(function(res) {
             return db.getConnection();
         }).then(function(res) {
@@ -150,7 +148,7 @@ describe('Transaction', function() {
 
     var Page = db.define("page", {
         id: type.id(),
-        v: type.integer(),
+        value: type.integer(),
     })
     var tx = null;
     var conn2 = null;
@@ -161,70 +159,23 @@ describe('Transaction', function() {
             return db.beginTransaction();
         }).then(function(res) {
             tx = res;
-            return tx.insert(Page, {
-                v: 100,
-            })
+            return db.insert(Page, {
+                value: 100,
+            }, tx)
         }).then(function(res) {
             return Page.one({
-                v: 100,
+                value: 100,
             })
         }).then(function(res) {
             should(res).eql(undefined);
-            return tx.select(Page);
+            return Page.select(tx);
         }).then(function(res) {
-            res[0].v.should.eql(100);
+            res[0].value.should.eql(100);
             return tx.rollback();
         }).then(function(res) {
             return Page.select();
         }).then(function(res) {
             res.length.should.eql(0);
-        }).done(function() {
-            done();
-        });
-    });
-});
-describe('Transaction', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
-
-    var Page = db.define("page", {
-        id: type.id(),
-        v: type.integer(),
-    })
-    var tx = null;
-    var conn2 = null;
-    it('Count', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            return db.beginTransaction();
-        }).then(function(res) {
-            tx = res;
-            var pages = [];
-            for (var i = 0; i < 3; i++) {
-                pages.push({
-                    v: i,
-                })
-            }
-            return tx.insert(Page, pages);
-        }).then(function(res) {
-            return tx.count(Page);
-        }).then(function(res) {
-            res.should.eql(3);
-        }).then(function(res) {
-
-        }).then(function(res) {
-
-        }).then(function(res) {
-
-        }).then(function(res) {
-
-        }).then(function(res) {
-            
         }).done(function() {
             done();
         });
