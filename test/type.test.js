@@ -8,7 +8,7 @@ var type = orm.type;
 describe('Type', function() {
     //integer varchar datetime
     //notNull default length auto
-    //key unique
+    //pkey unique
     it('Integer', function(done) {
         var t = type.integer();
         console.log(t.toSql());
@@ -71,7 +71,7 @@ describe('Type', function() {
         done();
     });
     it('Constraint', function(done) {
-        var t = type.integer().key();
+        var t = type.integer().pkey();
         console.log(t.toSql());
         t.toSql().should.eql("INTEGER PRIMARY KEY");
 

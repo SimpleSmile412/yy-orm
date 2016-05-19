@@ -73,4 +73,15 @@ describe('Cond', function() {
 
         done();
     });
+    it('Cond Transform', function(done) {
+        var c1 = cond.eq("a", 1);
+        var c2 = cond.lt("b", 100);
+        var c3 = c1.asc("c").limit(10, 5);
+        var mapping = { "a": "A", "b": "B", "c": "C" };
+        c2.transform(mapping);
+        console.log(c2.toSql());
+        // c2.toSql().should.eql("`a` = 1 ORDER BY `b` ASC LIMIT 10 OFFSET 5");
+
+        done();
+    });
 });

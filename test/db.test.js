@@ -83,11 +83,19 @@ describe('DB', function() {
                 return { value: "" + item, time: new Date(2015, 1, 1 + item) }
             })
             var res = yield db.insert("page", values);
-            var res = yield db.select("page", ["value", "time"], cond.between("value", 2, 5));
+
+            var res = yield db.select("page", ["value", "time"], cond.between("value", '2', '5'));
             res.length.should.eql(4);
             res[0].value.should.eql("2");
             res[0].time.should.eql(values[2].time);
             should(res[0].id).eql(undefined);
+
+            var res = yield db.select("page", ["value", "time"], "value between '2' and '5'");
+            res.length.should.eql(4);
+            res[0].value.should.eql("2");
+            res[0].time.should.eql(values[2].time);
+            should(res[0].id).eql(undefined);
+
             var res = yield db.one("page", values[8]);
             delete res.id;
             res.should.eql(values[8]);
@@ -162,4 +170,3 @@ describe('DB', function() {
         })
     })
 });
-
