@@ -76,11 +76,13 @@ describe('Cond', function() {
     it('Cond Transform', function(done) {
         var c1 = cond.eq("a", 1);
         var c2 = cond.lt("b", 100);
-        var c3 = c1.asc("c").limit(10, 5);
+        var c3 = cond.and(c1, c2).asc("c").limit(10, 5);
         var mapping = { "a": "A", "b": "B", "c": "C" };
-        c2.transform(mapping);
-        console.log(c2.toSql());
-        // c2.toSql().should.eql("`a` = 1 ORDER BY `b` ASC LIMIT 10 OFFSET 5");
+        c4 = c3.transform(mapping);
+        console.log(c3.toSql());
+        c3.toSql().should.eql("`a` = 1 AND `b` < 100 ORDER BY `c` ASC LIMIT 10 OFFSET 5");
+        console.log(c4.toSql());
+        c4.toSql().should.eql("`A` = 1 AND `B` < 100 ORDER BY `c` ASC LIMIT 10 OFFSET 5");
 
         done();
     });
