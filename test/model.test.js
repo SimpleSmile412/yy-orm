@@ -50,11 +50,11 @@ describe('Model', function() {
             } catch (err) {
                 err.message.should.eql("ER_NO_SUCH_TABLE: Table 'test.user' doesn't exist");
             }
-            yield User.sync();
+            yield User.build();
             yield db.select("user");
             done();
         }).catch(function(err) {
-            console.error(err);
+            console.error(err.stack);
         });
     });
     it('Insert', function(done) {
@@ -74,7 +74,7 @@ describe('Model', function() {
             ret[1].id.should.eql(3);
             done();
         }).catch(function(err) {
-            console.error(err);
+            console.error(err.stack);
         });
     });
     it('Update', function(done) {
@@ -94,7 +94,7 @@ describe('Model', function() {
             res.name.should.eql("name");
             done();
         }).catch(function(err) {
-            console.error(err);
+            console.error(err.stack);
         });
     });
     it('Select', function(done) {
@@ -114,7 +114,7 @@ describe('Model', function() {
             should(res[0]).eql(ret[0]);
             done();
         }).catch(function(err) {
-            console.error(err);
+            console.error(err.stack);
         });
     });
     it('One', function(done) {
@@ -134,10 +134,11 @@ describe('Model', function() {
             should(res).eql(ret[2]);
             done();
         }).catch(function(err) {
-            console.error(err);
+            console.error(err.stack);
         });
     });
     it('Delete', function(done) {
+        this.timeout(3000);
         co(function*() {
             var db = orm.create(opt);
             var User = db.define("user", def);
@@ -180,7 +181,7 @@ describe('Model', function() {
             res.should.eql(2);
             done();
         }).catch(function(err) {
-            console.error(err);
+            console.error(err.stack);
         });
     });
 });
