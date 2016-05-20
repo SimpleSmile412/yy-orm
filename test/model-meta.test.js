@@ -21,6 +21,12 @@ describe('ModelMeta', function() {
         meta.toSql().should.eql(expect);
         done();
     })
+    it('Value', function(done) {
+        var meta = new ModelMeta({ base: defBase });
+        console.log(JSON.stringify(meta.defaultValue));
+        meta.defaultValue.should.eql({ "id": null, "name": null, "alias": "Rookie", "rank": 0, "registTime": null });
+        done();
+    })
     it('toRow', function(done) {
         var meta = new ModelMeta({ base: defBase });
         var obj = { name: "name", alias: "alias", rank: 1, registTime: new Date(2015, 0, 1) };

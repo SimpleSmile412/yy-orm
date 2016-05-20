@@ -184,4 +184,21 @@ describe('Model', function() {
             console.error(err.stack);
         });
     });
+    it('Id', function(done) {
+        co(function*() {
+            var db = orm.create(opt);
+            var User = db.define("user", def);
+            yield db.rebuild();
+            var date = new Date(2015, 0, 1);
+            var users = _.range(3).map(function(i) {
+                return { name: "name" + i, registTime: date };
+            });
+            var ret = yield User.insert({ registTime: date });
+            var res = yield User.select();
+            console.log(res);
+            done();
+        }).catch(function(err) {
+            console.error(err.stack);
+        });
+    });
 });
