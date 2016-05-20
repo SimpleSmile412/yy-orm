@@ -1,232 +1,98 @@
 var Promise = require("bluebird");
 var should = require("should");
+var co = require("co");
 
-var orm = require("../..");
+var orm = require("..");
 var type = orm.type;
 var cond = orm.cond;
 
-var logger = orm.logger;
+var opt = {
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'test'
+};
+var def = {
+    id: type.id(),
+    value: type.integer(),
+};
+
+var db = orm.create(opt);
+var Page = db.define("page", def);
 
 describe('Transaction', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
-
-    var Page = db.define("page", {
-        id: type.id(),
-        v: type.integer(),
-    })
-    var conn = null;
-    var conn2 = null;
-    it('Rollback', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            return db.getConnection();
-        }).then(function(res) {
-            conn = res;
-            return conn.query("begin");
-        }).then(function(res) {
-            return conn.query("insert into page(v) values(100)");
-        }).then(function(res) {
-            return db.getConnection();
-        }).then(function(res) {
-            conn2 = res;
-            return conn2.query("select * from page");
-        }).then(function(res) {
+    it('Rollback Use DB', function(done) {
+        co(function*() {
+            var conn2 = null;
+            yield db.rebuild();
+            var conn = yield db.getConnection();
+            var res = yield conn.query("begin");
+            var res = yield conn.query("insert into page(value) values(100)");
+            var conn2 = yield db.getConnection();
+            var res = yield conn2.query("select * from page");
             res.rows.length.should.eql(0);
-            return conn.query("select * from page");
-        }).then(function(res) {
+            var res = yield conn.query("select * from page");
             res.rows.length.should.eql(1);
-        }).then(function(res) {
-            return conn.query("rollback");
-        }).then(function(res) {
-            return conn.query("select * from page");
-        }).then(function(res) {
+            var res = yield conn.query("rollback");
+            var res = yield conn.query("select * from page");
             res.rows.length.should.eql(0);
-        }).done(function() {
             done();
+        }).catch(function(err) {
+            console.log(err.stack);
         });
     });
-});
-describe('Transaction', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
-
-    var Page = db.define("page", {
-        id: type.id(),
-        v: type.integer(),
-    })
-    var conn = null;
-    var conn2 = null;
-    it('Rollback2', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            return db.getConnection();
-        }).then(function(res) {
-            conn = res;
-            return conn.beginTransaction();
-        }).then(function(res) {
-            return conn.query("insert into page(v) values(100)");
-        }).then(function(res) {
-            return db.getConnection();
-        }).then(function(res) {
-            conn2 = res;
-            return conn2.query("select * from page");
-        }).then(function(res) {
+    it('Rollback2 Use Conn', function(done) {
+        co(function*() {
+            yield db.rebuild();
+            var conn = yield db.getConnection();
+            yield conn.beginTransaction();
+            yield conn.query("insert into page(value) values(100)");
+            var conn2 = yield db.getConnection();
+            var res = yield conn2.query("select * from page");
             res.rows.length.should.eql(0);
-            return conn.query("select * from page");
-        }).then(function(res) {
+            var res = yield conn.query("select * from page");
             res.rows.length.should.eql(1);
-        }).then(function(res) {
-            return conn.rollback();
-        }).then(function(res) {
-            return conn.query("select * from page");
-        }).then(function(res) {
+            yield conn.rollback();
+            var res = yield conn.query("select * from page");
             res.rows.length.should.eql(0);
-        }).done(function() {
             done();
+        }).catch(function(err) {
+            console.log(err.stack);
+        });
+    })
+    it('Rollback3 Use Tx', function(done) {
+        co(function*() {
+            yield db.rebuild();
+            var tx = yield db.beginTransaction();
+            yield tx.query("insert into page(value) values(100)");
+            var conn2 = yield db.getConnection();
+            var res = yield conn2.query("select * from page");
+            res.rows.length.should.eql(0);
+            var res = yield tx.query("select * from page");
+            res.rows.length.should.eql(1);
+            yield tx.rollback();
+            var res = yield conn2.query("select * from page");
+            res.rows.length.should.eql(0);
+            done();
+        }).catch(function(err) {
+            console.log(err.stack);
         });
     });
-});
-describe('Transaction', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
-
-    var Page = db.define("page", {
-        id: type.id(),
-        v: type.integer(),
-    })
-    var tx = null;
-    var conn2 = null;
-    it('Rollback3', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            return db.beginTransaction();
-        }).then(function(res) {
-            tx = res;
-            return tx.query("insert into page(v) values(100)");
-        }).then(function(res) {
-            return db.getConnection();
-        }).then(function(res) {
-            conn2 = res;
-            return conn2.query("select * from page");
-        }).then(function(res) {
-            res.rows.length.should.eql(0);
-            return tx.query("select * from page");
-        }).then(function(res) {
-            res.rows.length.should.eql(1);
-        }).then(function(res) {
-            return tx.rollback();
-        }).then(function(res) {
-            return conn2.query("select * from page");
-        }).then(function(res) {
-            res.rows.length.should.eql(0);
-        }).done(function() {
-            done();
-        });
-    });
-});
-describe('Transaction', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
-
-    var Page = db.define("page", {
-        id: type.id(),
-        v: type.integer(),
-    })
-    var tx = null;
-    var conn2 = null;
     it('Rollback4', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            return db.beginTransaction();
-        }).then(function(res) {
-            tx = res;
-            return tx.insert(Page, {
-                v: 100,
-            })
-        }).then(function(res) {
-            return Page.one({
-                v: 100,
-            })
-        }).then(function(res) {
+        co(function*() {
+            yield db.rebuild();
+            var tx = yield db.beginTransaction();
+            yield Page.insert({ value: 100, }, tx);
+            var res = yield Page.one({ value: 100, })
             should(res).eql(undefined);
-            return tx.select(Page);
-        }).then(function(res) {
-            res[0].v.should.eql(100);
-            return tx.rollback();
-        }).then(function(res) {
-            return Page.select();
-        }).then(function(res) {
+            var res = yield Page.select(tx);
+            res[0].value.should.eql(100);
+            yield tx.rollback();
+            var res = yield Page.select();
             res.length.should.eql(0);
-        }).done(function() {
             done();
+        }).catch(function(err) {
+            console.log(err.stack);
         });
     });
-});
-describe('Transaction', function() {
-    var db = orm.create({
-        host: 'localhost',
-        user: 'root',
-        password: 'root',
-        database: 'test'
-    });
-
-    var Page = db.define("page", {
-        id: type.id(),
-        v: type.integer(),
-    })
-    var tx = null;
-    var conn2 = null;
-    it('Count', function(done) {
-        Promise.try(function() {
-            return db.rebuild();
-        }).then(function(res) {
-            return db.beginTransaction();
-        }).then(function(res) {
-            tx = res;
-            var pages = [];
-            for (var i = 0; i < 3; i++) {
-                pages.push({
-                    v: i,
-                })
-            }
-            return tx.insert(Page, pages);
-        }).then(function(res) {
-            return tx.count(Page);
-        }).then(function(res) {
-            res.should.eql(3);
-        }).then(function(res) {
-
-        }).then(function(res) {
-
-        }).then(function(res) {
-
-        }).then(function(res) {
-
-        }).then(function(res) {
-            
-        }).done(function() {
-            done();
-        });
-    });
-});
+})
