@@ -67,7 +67,7 @@ describe('Model', function() {
                 return { name: "name" + i, registTime: date };
             });
             var ret = yield User.insert(users[0]);
-            ret.should.eql({ id: 1, name: "name0", registTime: date });
+            ret.should.eql({ id: 1, name: "name0", alias: "Rookie", rank: 0, registTime: date });
             var ret = yield User.insert(users.slice(1));
             ret.length.should.eql(2);
             ret[0].id.should.eql(2);
@@ -89,7 +89,7 @@ describe('Model', function() {
             var ret = yield User.insert(users);
             ret.length.should.eql(3);
             ret[2].name = "name";
-            User.update(ret[2]);
+            yield User.update(ret[2]);
             var res = yield db.one("user", { id: ret[2].id });
             res.name.should.eql("name");
             done();
@@ -109,8 +109,6 @@ describe('Model', function() {
             var ret = yield User.insert(users);
             var res = yield User.select();
             should(res[0] instanceof ModelObject).eql(true);
-            ret[0].rank = 0; //default
-            ret[0].alias = "Rookie"; //default
             should(res[0]).eql(ret[0]);
             done();
         }).catch(function(err) {
@@ -129,8 +127,6 @@ describe('Model', function() {
             var ret = yield User.insert(users);
             var res = yield User.one({ id: ret[2].id });
             should(res instanceof ModelObject).eql(true);
-            ret[2].rank = 0; //default
-            ret[2].alias = "Rookie"; //default
             should(res).eql(ret[2]);
             done();
         }).catch(function(err) {
@@ -194,8 +190,8 @@ describe('Model', function() {
                 return { name: "name" + i, registTime: date };
             });
             var ret = yield User.insert({ registTime: date });
-            var res = yield User.select();
-            console.log(res);
+            var res = yield User.get(ret.id);
+            res.should.eql(ret);
             done();
         }).catch(function(err) {
             console.error(err.stack);
