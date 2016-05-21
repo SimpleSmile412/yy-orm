@@ -3,6 +3,7 @@ var should = require("should");
 var ModelMeta = require("../lib/model-meta");
 var _ = require("lodash");
 var JSONB = require("yy-big").JSON;
+var BigNumber = require("yy-big").Number;
 
 var orm = require("..");
 var type = orm.type;
@@ -38,6 +39,17 @@ describe('ModelMeta', function() {
         json.should.eql('{"name":"name","alias":"alias","page_rank":1,"regist_time":"2014-12-31T16:00:00.000Z"}');
         done();
     });
+    it('Bigint toRow', function(done) {
+        var base = _.clone(defBase);
+        base.uid = type.bigint();
+        var meta = new ModelMeta({ base: base });
+        var obj = { name: "name", alias: "alias", rank: 1, registTime: new Date(2015, 0, 1), uid: new BigNumber(1) };
+        var row = meta.toRow(obj);
+        var json = JSON.stringify(row);
+        console.log(json);
+        json.should.eql('{"name":"name","alias":"alias","page_rank":1,"regist_time":"2014-12-31T16:00:00.000Z","uid":"1"}');
+        done();
+    });
     it('toObj', function(done) {
         var meta = new ModelMeta({ base: defBase });
         var row = { name: "name", alias: "alias", page_rank: 1, regist_time: new Date(2015, 0, 1) };
@@ -53,10 +65,9 @@ describe('ModelMeta', function() {
         var meta = new ModelMeta({ base: base });
         var row = { name: "name", alias: "alias", page_rank: 1, regist_time: new Date(2015, 0, 1), uid: 1 };
         var obj = meta.toObj(row);
-        console.log(obj);
         var jsonb = JSONB.stringify(obj);
         console.log(jsonb);
-        jsonb.should.eql('{"name":"name","alias":"alias","rank":1,"registTime":"2014-12-31T16:00:00.000Z","uid":"1"}');
+        jsonb.should.eql('{"name":"name","alias":"alias","rank":1,"registTime":"2014-12-31T16:00:00.000Z","uid":1}');
         done();
     });
 });

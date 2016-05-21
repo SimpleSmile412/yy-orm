@@ -5,8 +5,6 @@ var orm = require("..");
 var logger = orm.logger;
 var type = orm.type;
 var cond = orm.cond;
-var condType = cond.type;
-var condTool = cond.tool;
 
 describe('Cond', function() {
     it('Simple Cond', function(done) {

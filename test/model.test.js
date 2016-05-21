@@ -110,12 +110,16 @@ describe('Model', function() {
             var res = yield User.select();
             should(res[0] instanceof ModelObject).eql(true);
             should(res[0]).eql(ret[0]);
+            var res = yield User.select("name = 'name2'");
+            res.length.should.eql(1);
+            res[0].should.eql(ret[2]);
             done();
         }).catch(function(err) {
             console.error(err.stack);
         });
     });
     it('One', function(done) {
+        this.timeout(3000);
         co(function*() {
             var db = orm.create(opt);
             var User = db.define("user", def);
@@ -192,6 +196,24 @@ describe('Model', function() {
             var ret = yield User.insert({ registTime: date });
             var res = yield User.get(ret.id);
             res.should.eql(ret);
+            done();
+        }).catch(function(err) {
+            console.error(err.stack);
+        });
+    });
+    it('Parse/Stringify', function(done) {
+        co(function*() {
+            var db = orm.create(opt);
+            var def = { id: type.bigint().auto().pkey(), name: type.varchar() };
+            var User = db.define("User", def);
+            yield db.rebuild();
+            yield User.insert({});
+            var res = yield User.select("id > 0");
+            var json = User.stringify(res[0]);
+            console.log(json);
+            json.should.eql('{"id":1,"name":null}');
+            var obj = User.parse(json);
+            obj.should.eql(res[0]);
             done();
         }).catch(function(err) {
             console.error(err.stack);
