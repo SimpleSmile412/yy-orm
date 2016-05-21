@@ -6,7 +6,7 @@ var logger = orm.logger;
 var type = orm.type;
 
 describe('Type', function() {
-    //integer varchar datetime
+    //integer varchar datetime bigint
     //notNull default length auto
     //pkey unique
     it('Integer', function(done) {
@@ -29,6 +29,29 @@ describe('Type', function() {
         var t = type.integer().auto();
         console.log(t.toSql());
         t.toSql().should.eql("INTEGER AUTO_INCREMENT");
+
+        done();
+    });
+    it('Bigint', function(done) {
+        var t = type.bigint();
+        console.log(t.toSql());
+        t.toSql().should.eql("BIGINT");
+
+        var t = type.bigint(10);
+        console.log(t.toSql());
+        t.toSql().should.eql("BIGINT DEFAULT 10");
+
+        var t = type.bigint().default(10);
+        console.log(t.toSql());
+        t.toSql().should.eql("BIGINT DEFAULT 10");
+
+        var t = type.bigint().notNull();
+        console.log(t.toSql());
+        t.toSql().should.eql("BIGINT NOT NULL");
+
+        var t = type.bigint().auto();
+        console.log(t.toSql());
+        t.toSql().should.eql("BIGINT AUTO_INCREMENT");
 
         done();
     });

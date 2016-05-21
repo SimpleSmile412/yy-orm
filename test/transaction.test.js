@@ -36,6 +36,8 @@ describe('Transaction', function() {
             var res = yield conn.query("rollback");
             var res = yield conn.query("select * from page");
             res.rows.length.should.eql(0);
+            conn.release();
+            conn2.release();
             done();
         }).catch(function(err) {
             console.log(err.stack);
@@ -55,6 +57,8 @@ describe('Transaction', function() {
             yield conn.rollback();
             var res = yield conn.query("select * from page");
             res.rows.length.should.eql(0);
+            conn.release();
+            conn2.release();
             done();
         }).catch(function(err) {
             console.log(err.stack);
@@ -73,6 +77,7 @@ describe('Transaction', function() {
             yield tx.rollback();
             var res = yield conn2.query("select * from page");
             res.rows.length.should.eql(0);
+            conn2.release();
             done();
         }).catch(function(err) {
             console.log(err.stack);

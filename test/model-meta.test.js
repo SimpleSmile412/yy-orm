@@ -15,9 +15,9 @@ var defBase = {
 
 describe('ModelMeta', function() {
     it('Base', function(done) {
-        var meta = new ModelMeta({ base: defBase });
+        var meta = new ModelMeta({ base: defBase }, { table: "user" });
         console.log(meta.toSql());
-        var expect = `id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(32), alias VARCHAR(128) DEFAULT 'Rookie', page_rank INTEGER DEFAULT 0, regist_time DATETIME NOT NULL, UNIQUE(name)`;
+        var expect = `CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(32), alias VARCHAR(128) DEFAULT 'Rookie', page_rank INTEGER DEFAULT 0, regist_time DATETIME NOT NULL, UNIQUE(name))`;
         meta.toSql().should.eql(expect);
         done();
     })
