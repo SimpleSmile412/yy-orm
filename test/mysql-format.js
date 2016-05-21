@@ -1,5 +1,6 @@
 var mysql = require("mysql");
-var BigNumber = require('bignumber.js');
+var BigNumber = require('yy-big').Number;
+var JSONB = require("yy-big").JSON;
 
 //?
 console.log("Single ?");
@@ -35,3 +36,6 @@ console.log("['a','b','c'] 		=> " + mysql.format("??", [
 // console.log("[new Date(),new Date()]	=> " + mysql.format("??", [
 //     [new Date(), new Date()]
 // ]));
+
+//JSONB
+console.log(JSONB.stringify({ bigint: new BigNumber(2).pow(64) }));
