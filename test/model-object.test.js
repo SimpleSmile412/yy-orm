@@ -72,7 +72,7 @@ describe('ModelObject', function() {
             ret0.name = "name";
             yield ret0.update();
             yield res[0].sync();
-            res[0].value.should.eql("value");
+            res[0].name.should.eql("name");
             done();
         }).catch(function(err) {
             console.log(err.stack);
