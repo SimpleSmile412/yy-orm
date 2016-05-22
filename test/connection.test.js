@@ -41,7 +41,7 @@ describe("Connection", function() {
             res.rows[0].should.eql({ id: 1, name: "name", alias: "Rookie", rank: 0, registTime: date });
             done();
         }).catch(function(err) {
-            console.log(err);
+            console.log(err.stack);
         })
     });
 });

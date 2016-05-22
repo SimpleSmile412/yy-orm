@@ -39,4 +39,43 @@ describe('ModelObject', function() {
             console.log(err.stack);
         });
     });
+    it('Sync', function(done) {
+        co(function*() {
+            yield db.rebuild();
+            var page = yield Page.insert({ value: "hello", });
+            var res = yield Page.select();
+            res[0].should.eql(page);
+            res[0].value = "world";
+            yield res[0].update();
+            yield page.sync();
+            yield res[0].delete();
+            yield page.sync();
+            page.value.should.eql("world");
+            done();
+        }).catch(function(err) {
+            console.log(err.stack);
+        });
+    });
+    it('Bigint', function(done) {
+        co(function*() {
+            var def = {
+                id: type.bigint().auto().pkey(),
+                name: type.varchar(),
+            }
+            var User = db.define("user", def);
+            yield db.rebuild();
+            var ret0 = yield User.insert({});
+            var ret1 = yield User.insert({});
+            var res = yield User.select();
+            Number(res[0].id).should.eql(1);
+            Number(res[1].id).should.eql(2);
+            ret0.name = "name";
+            yield ret0.update();
+            yield res[0].sync();
+            res[0].name.should.eql("name");
+            done();
+        }).catch(function(err) {
+            console.log(err.stack);
+        });
+    });
 });

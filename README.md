@@ -56,4 +56,5 @@ asc
 desc
 limit 
 
+batch update but has delete...
 
