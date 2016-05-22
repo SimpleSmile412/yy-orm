@@ -201,7 +201,7 @@ describe('Model', function() {
             console.error(err.stack);
         });
     });
-    it('Parse/Stringify', function(done) {
+    it('Bigint Parse/Stringify', function(done) {
         co(function*() {
             var db = orm.create(opt);
             var def = { id: type.bigint().auto().pkey(), name: type.varchar() };
@@ -214,6 +214,23 @@ describe('Model', function() {
             json.should.eql('{"id":1,"name":null}');
             var obj = User.parse(json);
             obj.should.eql(res[0]);
+            done();
+        }).catch(function(err) {
+            console.error(err.stack);
+        });
+    });
+    it('Sync', function(done) {
+        co(function*() {
+            var db = orm.create(opt);
+            var User = db.define("user", def);
+            yield db.rebuild();
+            var date = new Date(2015, 0, 1);
+            var users = _.range(3).map(function(i) {
+                return { name: "name" + i, registTime: date };
+            });
+            yield User.insert(users);
+            var res = yield User.select();
+            yield db.update("user", { name: "name10" }, { name: "name0" });
             done();
         }).catch(function(err) {
             console.error(err.stack);

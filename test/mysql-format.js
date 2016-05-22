@@ -20,9 +20,7 @@ console.log("[['a',1],['b',2]]	=> " + mysql.format("?", [
         ['b', 2]
     ]
 ]));
-console.log("[1,2,2^64,2^64]		=> " + mysql.format("?", [
-    [1, 2, Math.pow(2, 64), new BigNumber(2).pow(64)]
-]));
+
 
 //??
 console.log("Double ??");
@@ -39,3 +37,9 @@ console.log("['a','b','c'] 		=> " + mysql.format("??", [
 
 //JSONB
 console.log(JSONB.stringify({ bigint: new BigNumber(2).pow(64) }));
+
+//Bigint
+console.log("[1,2,2^64,2^64]		=> " + mysql.format("?", [
+    [1, 2, Math.pow(2, 64), new BigNumber(2).pow(64)]
+]));
+console.log(mysql.format("?? = ?", ["value", [new BigNumber(2)]]));
