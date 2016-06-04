@@ -78,6 +78,7 @@ describe('Model', function() {
         });
     });
     it('Update', function(done) {
+        this.timeout(3000);
         co(function*() {
             var db = orm.create(opt);
             var User = db.define("user", def);
@@ -98,6 +99,7 @@ describe('Model', function() {
         });
     });
     it('Select', function(done) {
+        this.timeout(3000);
         co(function*() {
             var db = orm.create(opt);
             var User = db.define("user", def);

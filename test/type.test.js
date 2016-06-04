@@ -32,6 +32,25 @@ describe('Type', function() {
 
         done();
     });
+    it('Double', function(done) {
+        var t = type.double();
+        console.log(t.toSql());
+        t.toSql().should.eql("DOUBLE");
+
+        var t = type.double(10);
+        console.log(t.toSql());
+        t.toSql().should.eql("DOUBLE DEFAULT 10");
+
+        var t = type.double().default(10);
+        console.log(t.toSql());
+        t.toSql().should.eql("DOUBLE DEFAULT 10");
+
+        var t = type.double().notNull();
+        console.log(t.toSql());
+        t.toSql().should.eql("DOUBLE NOT NULL");
+
+        done();
+    });
     it('Bigint', function(done) {
         var t = type.bigint();
         console.log(t.toSql());
