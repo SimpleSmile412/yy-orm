@@ -1,6 +1,6 @@
 {
   "name": "yy-orm",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "node orm",
   "main": "index.js",
   "dependencies": {
@@ -31,5 +31,8 @@
   "bugs": {
     "url": "https://github.com/yuemenglong/yy-orm/issues"
   },
-  "homepage": "https://github.com/yuemenglong/yy-orm#readme"
+  "homepage": "https://github.com/yuemenglong/yy-orm#readme",
+  "directories": {
+    "test": "test"
+  }
 }
