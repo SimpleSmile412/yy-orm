@@ -27,9 +27,9 @@ var db = orm.create(opt);
     alias: type.varchar("Rookie"),
     rank: type.integer().default(0),
     registTime: type.datetime().notNull(),
-};`
+};
 
-`var User = db.define("User", def);`
+var User = db.define("User", def);`
 
 # Type
 integer
