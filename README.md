@@ -14,8 +14,9 @@
   * [Combined Cond](#combined-cond)
   * [Decorate Cond](#decorate-cond)
   * [Cond Transform](#cond-transform)
-# Configure
+* [Database](#database)
 
+# Configure
 ### Quick Started
 `var orm = require("yy-orm");`
 
@@ -76,6 +77,17 @@ limit
 
 ### Cond Transform
 transform
+
+# Database
+query  
+insert
+update
+select
+delete
+count
+Transaction Rollback
+Transaction CURD
+
 
 batch update but has delete...
 
