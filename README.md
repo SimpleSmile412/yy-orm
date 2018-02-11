@@ -1,12 +1,18 @@
 # yy-orm
 
 # Table of Contents
-+ [Installation](#Installation)
 
-# Getting Started
+* [Installation](#installation)
+  * [Quick Start](#quick-start)
+  * [Create Database Object](#create-database-object)
+  * [Define Schema](#define-schema)
+
+## Installation
+
+### Quick Start
 var orm = require("yy-orm");
 
-## Create Database Object
+### Create Database Object
 var opt = { 
 	host: 'localhost',
 	user: 'root', 
@@ -15,7 +21,7 @@ var opt = {
 };
 var db = orm.create(opt);
 
-## Define Schema
+### Define Schema
 var def = {
     id: type.id(),
     name: type.varchar(32).unique(),
