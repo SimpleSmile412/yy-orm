@@ -28,7 +28,7 @@
     };
     var db = orm.create(opt);`
 
-## Define Schema
+### Define Schema
     `var def = {
     id: type.id(),
     name: type.varchar(32).unique(),
@@ -44,17 +44,17 @@ double
 varchar
 datetime
 
-## Props
+### Props
 default
 length
 
-## Constraint
+### Constraint
 notNull
 unique
 
 
 # Cond
-## Simple Cond
+### Simple Cond
 eq
 ne
 gt
@@ -65,16 +65,16 @@ in
 nin 
 between 
 
-## Combined Cond
+### Combined Cond
 and 
 or
 
-## Decorate Cond
+### Decorate Cond
 asc 
 desc
 limit 
 
-## Cond Transform
+### Cond Transform
 transform
 
 batch update but has delete...
