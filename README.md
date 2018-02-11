@@ -3,13 +3,12 @@
 # Table of Contents
 
 * [Installation](#installation)
-  * [Quick Start](#quick-start)
+  * [Quick Started](#quick-started)
   * [Create Database Object](#create-database-object)
   * [Define Schema](#define-schema)
-
 ## Installation
 
-### Quick Start
+### Quick Started
 var orm = require("yy-orm");
 
 ### Create Database Object
