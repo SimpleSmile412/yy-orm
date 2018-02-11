@@ -16,10 +16,10 @@
   * [Cond Transform](#cond-transform)
 # Configure
 
-## Quick Started
+### Quick Started
 `var orm = require("yy-orm");`
 
-## Create Database Object
+### Create Database Object
     `var opt = { 
 	host: 'localhost',
 	user: 'root', 
