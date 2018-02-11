@@ -1,4 +1,8 @@
 # yy-orm
+
+# Table of Contents
++ [Installation](#Installation)
+
 # Getting Started
 var orm = require("yy-orm");
 
