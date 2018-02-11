@@ -21,14 +21,14 @@ var opt = {
 var db = orm.create(opt);
 
 ### Define Schema
-var def = {
+`var def = {
     id: type.id(),
     name: type.varchar(32).unique(),
     alias: type.varchar("Rookie"),
     rank: type.integer().default(0),
     registTime: type.datetime().notNull(),
 };
-var User = db.define("User", def);
+var User = db.define("User", def);`
 
 # Type
 integer
