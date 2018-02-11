@@ -79,7 +79,7 @@ limit
 transform
 
 # Database
-query  
+query
 insert
 update
 select
