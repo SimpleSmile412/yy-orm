@@ -9,6 +9,11 @@
 * [Type](#type)
   * [Props](#props)
   * [Constraint](#constraint)
+* [Cond](#cond)
+  * [Simple Cond](#simple-cond)
+  * [Combined Cond](#combined-cond)
+  * [Decorate Cond](#decorate-cond)
+  * [Cond Transform](#cond-transform)
 # Configure
 
 ## Quick Started
@@ -60,14 +65,17 @@ in
 nin 
 between 
 
-##Combined Cond
+## Combined Cond
 and 
 or
 
-##Decorate Cond
+## Decorate Cond
 asc 
 desc
 limit 
+
+## Cond Transform
+transform
 
 batch update but has delete...
 
