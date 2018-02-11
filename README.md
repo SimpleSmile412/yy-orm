@@ -28,6 +28,7 @@ var def = {
     rank: type.integer().default(0),
     registTime: type.datetime().notNull(),
 };
+
 var User = db.define("User", def);
 
 # Type
