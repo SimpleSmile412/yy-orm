@@ -2,36 +2,40 @@
 
 # Table of Contents
 
-* [Installation](#installation)
+* [Configure](#configure)
   * [Quick Started](#quick-started)
   * [Create Database Object](#create-database-object)
   * [Define Schema](#define-schema)
-## Installation
+* [Type](#type)
+  * [Props](#props)
+  * [Constraint](#constraint)
+# Configure
 
-### Quick Started
-var orm = require("yy-orm");
+## Quick Started
+`var orm = require("yy-orm");`
 
-### Create Database Object
-var opt = { 
+## Create Database Object
+    `var opt = { 
 	host: 'localhost',
 	user: 'root', 
 	password: 'root', 
 	database: 'test'
-};
-var db = orm.create(opt);
+    };
+    var db = orm.create(opt);`
 
-### Define Schema
+## Define Schema
     `var def = {
     id: type.id(),
     name: type.varchar(32).unique(),
     alias: type.varchar("Rookie"),
     rank: type.integer().default(0),
-    registTime: type.datetime().notNull(),
+    registTime: type.datetime().notNull()
     };
     var User = db.define("User", def);`
 
 # Type
 integer
+double
 varchar
 datetime
 
